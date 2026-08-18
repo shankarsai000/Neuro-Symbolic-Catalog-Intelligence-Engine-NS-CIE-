@@ -5,7 +5,9 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.manufacturer_sourcing import fetch_official_manufacturer_specs
+from app.ai.category_schema import category_detector
 from app.ai.extractor import extract_product_specs
+from app.ai.neuro_symbolic import neuro_symbolic_validator
 from app.ai.schemas import (
     ChannelDescriptions,
     ConfidenceBreakdown,
@@ -13,6 +15,7 @@ from app.ai.schemas import (
     EnrichmentResponse,
     ExtractedAttributes,
     FieldProvenance,
+    NeuroSymbolicValidationResult,
 )
 from app.core.confidence import calculate_mathematical_confidence
 from app.core.delivery import build_channel_descriptions, generate_252_column_record
@@ -42,14 +45,14 @@ async def run_enrichment_pipeline(
 
     1. Input sanitization of placeholder noise.
     2. Master brand resolution against official legal standards.
-    3. Official manufacturer sourcing (HTTPS-only, domain allowlist, PDF/HTML parsing).
-    4. Zero-shot LLM extraction with LOV constraints (transparent source_mode).
-    5. Deterministic symbolic guardrails (UOM spacing, compound fractions, abbreviation compression).
-    6. Multi-channel description generation (Invoice, Mobile, Product Title, Long Desc).
-    7. Mathematical confidence scoring (C = 0.40*P + 0.35*L + 0.25*R).
-    8. Field-level provenance mapping with evidence snippets.
-    9. 252-column Unilog record delivery mapping.
-    10. Real persistence & HITL queue routing.
+    3. Category detection and taxonomy schema lookup.
+    4. Official manufacturer sourcing (HTTPS-only, domain allowlist, PDF/HTML parsing).
+    5. Category-aware LLM / Heuristic extraction with LOV constraints.
+    6. Neuro-symbolic validation (deterministic LOVs, synonym normalization, conflict detection).
+    7. Multi-channel description generation (Invoice, Mobile, Product Title, Long Desc).
+    8. Mathematical confidence scoring (C = 0.40*P + 0.35*L + 0.25*R).
+    9. Field-level provenance mapping with evidence snippets.
+    10. 252-column Unilog record delivery mapping & persistence.
     """
     start_time = time.perf_counter()
 
@@ -60,75 +63,63 @@ async def run_enrichment_pipeline(
     # Step 2: Canonical brand resolution
     canonical_brand, brand_score = master_data_repository.resolve_canonical_brand(raw_manuf_clean)
 
-    # Step 3: Official Manufacturer Sourcing
+    # Step 3: Category Detection & Schema Resolution
+    category_schema = category_detector.detect(
+        raw_desc=sanitized_desc,
+        mpn=request.mfg_part_num,
+        manufacturer=canonical_brand,
+    )
+
+    # Step 4: Official Manufacturer Sourcing
     sourced_evidence = await fetch_official_manufacturer_specs(
         canonical_brand=canonical_brand,
         mpn=request.mfg_part_num,
     )
 
-    # Step 4: Zero-Shot LLM / Heuristic Extraction
+    # Step 5: Category-Aware Extraction
     raw_attributes, source_mode = extract_product_specs(
         raw_desc=sanitized_desc,
         manufacturer=canonical_brand or None,
+        category=category_schema.name,
+        allowed_lovs=list(category_schema.allowed_lovs.get("item_type", [])),
         manufacturer_evidence=sourced_evidence.extracted_text or None,
+        mpn=request.mfg_part_num,
     )
+
+    if canonical_brand:
+        raw_attributes.brand = canonical_brand
 
     # If official manufacturer evidence exists, tag accordingly
     if sourced_evidence.http_status == 200 and source_mode == "LIVE_NIM":
         source_mode = "MANUFACTURER_SOURCE"
 
-    # Step 5: Deterministic Symbolic Guardrails
-    def _guardrail_field(val: str | None) -> str | None:
-        if not val:
-            return None
-        cleaned = clean_placeholders(val)
-        if not cleaned:
-            return None
-        spaced = enforce_uom_spacing(cleaned)
-        fractional = decimal_to_fraction(spaced)
-        return fractional
-
-    guarded_voltage = _guardrail_field(raw_attributes.voltage)
-    guarded_dimensions = _guardrail_field(raw_attributes.dimensions)
-    guarded_mounting = clean_placeholders(raw_attributes.mounting)
-    guarded_material = clean_placeholders(raw_attributes.material)
-    guarded_item_type = clean_placeholders(raw_attributes.item_type)
-    guarded_brand = canonical_brand or clean_placeholders(raw_attributes.brand)
-    guarded_mpn = clean_placeholders(raw_attributes.mpn) or request.mfg_part_num
-
-    # Guardrail all additional raw_specs
-    guarded_specs: dict[str, Any] = {}
-    for k, v in raw_attributes.raw_specs.items():
-        if isinstance(v, str):
-            guarded_specs[k] = _guardrail_field(v) or v
-        else:
-            guarded_specs[k] = v
-
-    final_attributes = ExtractedAttributes(
-        brand=guarded_brand,
-        item_type=guarded_item_type,
-        mpn=guarded_mpn,
-        voltage=guarded_voltage,
-        dimensions=guarded_dimensions,
-        mounting=guarded_mounting,
-        material=guarded_material,
-        raw_specs=guarded_specs,
+    # Step 6: Neuro-Symbolic Validation & Deterministic Synonym Normalization
+    validation_result = neuro_symbolic_validator.validate(
+        raw_attrs=raw_attributes,
+        schema=category_schema,
+        manufacturer_evidence=sourced_evidence.evidence_snippets,
     )
 
-    # Step 6: Multi-Channel Description Generation
+    final_attributes = validation_result.normalized_output
+
+    # Step 7: Multi-Channel Description Generation
     channel_dict = build_channel_descriptions(
-        brand=guarded_brand,
-        mpn=guarded_mpn,
+        brand=final_attributes.brand or canonical_brand,
+        mpn=final_attributes.mpn or request.mfg_part_num,
         attrs=final_attributes,
     )
     channel_desc = ChannelDescriptions(**channel_dict)
 
-    # Step 7: Mathematical Confidence Calculation (Rule 6)
+    # Step 8: Mathematical Confidence Calculation (Rule 6)
     confidence_breakdown = calculate_mathematical_confidence(
         extracted_attrs=final_attributes.model_dump(),
         invoice_desc=channel_desc.invoice_desc,
         provenance_score=sourced_evidence.provenance_score,
     )
+
+    # Flag for review if neuro-symbolic validator reported violations
+    if validation_result.needs_review:
+        confidence_breakdown.needs_review = True
 
     # Step 8: Field-Level Provenance Mapping
     evidence_snippets = sourced_evidence.evidence_snippets
@@ -143,7 +134,7 @@ async def run_enrichment_pipeline(
 
     provenance_map = {
         "brand": FieldProvenance(
-            value=guarded_brand,
+            value=final_attributes.brand,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
             evidence=f"Resolved from '{request.raw_manuf}'",
@@ -152,25 +143,25 @@ async def run_enrichment_pipeline(
             is_lov_validated=True,
         ).model_dump(),
         "item_type": FieldProvenance(
-            value=guarded_item_type,
+            value=final_attributes.item_type,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("item_type", f"Extracted from '{sanitized_desc[:60]}'"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
-            is_lov_validated=master_data_repository.is_valid_lov("item_type", guarded_item_type),
+            is_lov_validated=master_data_repository.is_valid_lov("item_type", final_attributes.item_type),
         ).model_dump(),
         "voltage": FieldProvenance(
-            value=guarded_voltage,
+            value=final_attributes.voltage,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("voltage", "Extracted voltage rating"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
-            is_lov_validated=master_data_repository.is_valid_lov("voltage", guarded_voltage),
+            is_lov_validated=master_data_repository.is_valid_lov("voltage", final_attributes.voltage),
         ).model_dump(),
         "dimensions": FieldProvenance(
-            value=guarded_dimensions,
+            value=final_attributes.dimensions,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("dimensions", "Converted fractional size"),
@@ -179,20 +170,20 @@ async def run_enrichment_pipeline(
             is_lov_validated=True,
         ).model_dump(),
         "material": FieldProvenance(
-            value=guarded_material,
+            value=final_attributes.material,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("material", "Extracted material specification"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
-            is_lov_validated=master_data_repository.is_valid_lov("material", guarded_material),
+            is_lov_validated=master_data_repository.is_valid_lov("material", final_attributes.material),
         ).model_dump(),
     }
 
     # Step 9: Static 252-Column Unilog Schema Delivery Mapping
     delivery_record = generate_252_column_record(
         raw_req=request,
-        canonical_brand=guarded_brand or "",
+        canonical_brand=final_attributes.brand or canonical_brand or "",
         attrs=final_attributes,
         descriptions=channel_dict,
         confidence=confidence_breakdown.total_confidence,
@@ -208,7 +199,7 @@ async def run_enrichment_pipeline(
                 mfg_part_num=request.mfg_part_num,
                 part_desc=request.part_desc,
                 raw_manuf=request.raw_manuf,
-                canonical_brand=guarded_brand,
+                canonical_brand=final_attributes.brand or canonical_brand,
                 status="completed" if not confidence_breakdown.needs_review else "review_required",
             )
             db.add(product)
@@ -291,5 +282,6 @@ async def run_enrichment_pipeline(
         confidence_score=confidence_breakdown.total_confidence,
         provenance=provenance_map,
         delivery_record_preview=delivery_record,
+        validation_result=validation_result,
         needs_review=confidence_breakdown.needs_review,
     )

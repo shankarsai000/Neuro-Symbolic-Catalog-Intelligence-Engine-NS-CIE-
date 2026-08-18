@@ -69,6 +69,26 @@ class EnrichmentRequest(BaseModel):
     )
 
 
+class ExtractionViolation(BaseModel):
+    field: str
+    raw_value: Optional[str] = None
+    reason: str
+    action_taken: str  # "normalized", "rejected", "missing_required", "evidence_conflict"
+    suggested_value: Optional[str] = None
+
+
+class NeuroSymbolicValidationResult(BaseModel):
+    category: str
+    is_valid: bool = True
+    passed_lov: bool = True
+    passed_rules: bool = True
+    violations: list[ExtractionViolation] = Field(default_factory=list)
+    raw_llm_output: dict[str, Any] = Field(default_factory=dict)
+    normalized_output: ExtractedAttributes
+    needs_review: bool = False
+    review_reasons: list[str] = Field(default_factory=list)
+
+
 class EnrichmentResponse(BaseModel):
     mfg_part_num: str
     attributes: ExtractedAttributes
@@ -87,6 +107,7 @@ class EnrichmentResponse(BaseModel):
     )
     provenance: Optional[dict[str, Any]] = None
     delivery_record_preview: Optional[dict[str, Any]] = None
+    validation_result: Optional[NeuroSymbolicValidationResult] = None
     needs_review: bool = False
 
 
@@ -107,6 +128,7 @@ class BatchItemResult(BaseModel):
     confidence_score: float
     needs_review: bool
     attributes: ExtractedAttributes
+    validation_result: Optional[NeuroSymbolicValidationResult] = None
 
 
 class BatchEnrichmentResponse(BaseModel):
