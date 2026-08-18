@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import AsyncGenerator
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -17,10 +18,15 @@ if DATABASE_URL.startswith("postgresql://"):
 elif DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
 
+connect_args = {}
+if "sqlite" in DATABASE_URL:
+    connect_args = {"timeout": 60.0}
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     future=True,
+    connect_args=connect_args,
 )
 
 async_session = async_sessionmaker(
@@ -35,8 +41,11 @@ class Base(DeclarativeBase):
 
 
 async def init_db() -> None:
-    """Initialize database tables."""
+    """Initialize database tables and WAL mode for SQLite."""
     async with engine.begin() as conn:
+        if "sqlite" in DATABASE_URL:
+            await conn.execute(text("PRAGMA journal_mode=WAL;"))
+            await conn.execute(text("PRAGMA busy_timeout=60000;"))
         await conn.run_sync(Base.metadata.create_all)
 
 
