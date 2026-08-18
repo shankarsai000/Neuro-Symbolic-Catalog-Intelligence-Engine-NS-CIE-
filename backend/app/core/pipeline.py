@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.agents.resolver import resolve_canonical_brand
+from app.agents.scraper import fetch_manufacturer_context
 from app.ai.extractor import extract_product_specs
 from app.ai.schemas import EnrichmentRequest, EnrichmentResponse, ExtractedAttributes
 from app.core.guardrails import (
@@ -10,26 +12,40 @@ from app.core.guardrails import (
 from app.core.sanitizer import clean_placeholders
 
 
-def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentResponse:
-    """Execute the end-to-end NS-CIE product catalog enrichment pipeline.
+async def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentResponse:
+    """Execute the end-to-end async NS-CIE product catalog enrichment pipeline.
 
-    Step 1: Sanitize raw description of placeholder noise.
-    Step 2: Extract structured technical attributes via LLM / heuristic fallback.
-    Step 3: Apply deterministic guardrails (UOM spacing & fraction formatting) on extracted attributes.
-    Step 4: Construct standard invoice description capped at 40 characters in ALL CAPS.
-    Step 5: Return finalized EnrichmentResponse.
+    Step 1: Sanitize raw description and manufacturer input of placeholder noise.
+    Step 2: Canonical brand resolution via RapidFuzz matching.
+    Step 3: Agentic web sourcing: Async retrieval of manufacturer product datasheet context with in-memory caching.
+    Step 4: Zero-shot LLM extraction grounded in datasheet context.
+    Step 5: Deterministic guardrails (UOM spacing & fraction formatting) applied on extracted attributes.
+    Step 6: Construction of standardized Unilog invoice description (ALL CAPS, <= 40 chars).
+    Step 7: Return finalized EnrichmentResponse.
     """
     # Step 1: Placeholder sanitization on input strings
     sanitized_desc = clean_placeholders(request.part_desc) or request.part_desc
-    sanitized_manuf = clean_placeholders(request.raw_manuf)
+    raw_manuf_clean = clean_placeholders(request.raw_manuf)
 
-    # Step 2: Zero-shot LLM extraction
+    # Step 2: Canonical brand resolution (RapidFuzz against Unilog Master Brand list)
+    canonical_brand = resolve_canonical_brand(raw_manuf_clean) if raw_manuf_clean else ""
+
+    # Step 3: Agentic Web Sourcing: Retrieve cached or simulated datasheet context
+    mfr_context = ""
+    if canonical_brand or request.mfg_part_num:
+        mfr_context = await fetch_manufacturer_context(
+            canonical_brand=canonical_brand,
+            mpn=request.mfg_part_num,
+        )
+
+    # Step 4: Zero-shot LLM extraction grounded in datasheet context
     raw_attributes, confidence, status = extract_product_specs(
         raw_desc=sanitized_desc,
-        manufacturer=sanitized_manuf,
+        manufacturer=canonical_brand or None,
+        manufacturer_context=mfr_context or None,
     )
 
-    # Step 3: Enforce strict deterministic guardrails on extracted attributes
+    # Step 5: Enforce strict deterministic guardrails on extracted attributes
     def _guardrail_field(val: str | None) -> str | None:
         if not val:
             return None
@@ -45,7 +61,7 @@ def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentResponse:
     guarded_mounting = clean_placeholders(raw_attributes.mounting)
     guarded_material = clean_placeholders(raw_attributes.material)
     guarded_item_type = clean_placeholders(raw_attributes.item_type)
-    guarded_brand = clean_placeholders(raw_attributes.brand)
+    guarded_brand = canonical_brand or clean_placeholders(raw_attributes.brand)
     guarded_mpn = clean_placeholders(raw_attributes.mpn) or request.mfg_part_num
 
     # Guardrail all additional raw_specs values
@@ -67,7 +83,7 @@ def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentResponse:
         raw_specs=guarded_specs,
     )
 
-    # Step 4: Construct standardized Unilog invoice description
+    # Step 6: Construct standardized Unilog invoice description
     # Pattern: [item_type] [mounting] [material] [voltage] [dimensions]
     desc_components: list[str] = []
     if final_attributes.item_type:
@@ -75,7 +91,6 @@ def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentResponse:
     if final_attributes.mounting:
         desc_components.append(final_attributes.mounting)
     if final_attributes.material:
-        # Standardize SST abbreviation if applicable
         mat_token = "SST" if "stainless" in final_attributes.material.lower() else final_attributes.material
         desc_components.append(mat_token)
     if final_attributes.voltage:
@@ -83,13 +98,10 @@ def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentResponse:
     if final_attributes.dimensions:
         desc_components.append(final_attributes.dimensions)
 
-    # If components list is empty, fallback to sanitized description
     raw_invoice_string = " ".join(desc_components) if desc_components else sanitized_desc
-
-    # Apply strict 40-character cap & uppercase formatting
     final_invoice_desc = format_invoice_desc(raw_invoice_string)
 
-    # Step 5: Final response
+    # Step 7: Final response
     return EnrichmentResponse(
         mfg_part_num=request.mfg_part_num,
         attributes=final_attributes,

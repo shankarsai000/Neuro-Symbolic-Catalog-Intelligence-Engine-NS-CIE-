@@ -71,5 +71,5 @@ async def test_guardrails(payload: GuardrailsTestRequest) -> GuardrailsTestRespo
 
 @router.post("/api/enrich-single", response_model=EnrichmentResponse)
 async def enrich_single(payload: EnrichmentRequest) -> EnrichmentResponse:
-    """Execute zero-shot AI extraction and deterministic guardrail enrichment for a single catalog record."""
-    return run_enrichment_pipeline(payload)
+    """Execute zero-shot AI extraction, brand resolution, and guardrails for a single catalog record."""
+    return await run_enrichment_pipeline(payload)

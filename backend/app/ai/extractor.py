@@ -33,34 +33,38 @@ ITEM_TYPE_REGEX = re.compile(
 
 
 def _heuristic_fallback_extract(
-    raw_desc: str, manufacturer: Optional[str] = None
+    raw_desc: str,
+    manufacturer: Optional[str] = None,
+    manufacturer_context: Optional[str] = None,
 ) -> ExtractedAttributes:
     """Fast deterministic rule-based extractor when LLM is unavailable."""
+    combined_text = f"{raw_desc} {manufacturer_context or ''}"
+
     brand = manufacturer.strip() if manufacturer else None
 
     # Item Type
-    item_type_match = ITEM_TYPE_REGEX.search(raw_desc)
+    item_type_match = ITEM_TYPE_REGEX.search(combined_text)
     item_type = item_type_match.group(1).title() if item_type_match else None
 
     # Voltage
-    volt_match = VOLTAGE_REGEX.search(raw_desc)
+    volt_match = VOLTAGE_REGEX.search(combined_text)
     voltage = volt_match.group(1) if volt_match else None
 
     # Material
-    mat_match = MATERIAL_REGEX.search(raw_desc)
+    mat_match = MATERIAL_REGEX.search(combined_text)
     material = mat_match.group(1).title() if mat_match else None
     if material and material.lower() in ("ss", "sst"):
         material = "Stainless Steel"
 
     # Mounting
-    mount_match = MOUNTING_REGEX.search(raw_desc)
+    mount_match = MOUNTING_REGEX.search(combined_text)
     mounting = mount_match.group(1).title() if mount_match else None
 
     # Dimensions
-    dim_match = DIMENSION_REGEX.search(raw_desc)
+    dim_match = DIMENSION_REGEX.search(raw_desc) or DIMENSION_REGEX.search(combined_text)
     dimensions = dim_match.group(1) if dim_match else None
 
-    # Part number extraction if leading token looks like MPN
+    # Part number extraction
     tokens = raw_desc.split()
     mpn = tokens[0] if tokens and any(char.isdigit() for char in tokens[0]) else None
 
@@ -77,13 +81,16 @@ def _heuristic_fallback_extract(
 
 
 def extract_product_specs(
-    raw_desc: str, manufacturer: Optional[str] = None
+    raw_desc: str,
+    manufacturer: Optional[str] = None,
+    manufacturer_context: Optional[str] = None,
 ) -> tuple[ExtractedAttributes, float, str]:
     """Extract structured technical product parameters from unstructured catalog text.
 
     Args:
         raw_desc: Cleaned or raw catalog description string.
         manufacturer: Optional manufacturer or supplier name.
+        manufacturer_context: Optional scraped datasheet context to ground extraction.
 
     Returns:
         tuple of (ExtractedAttributes, confidence_score, status_message)
@@ -99,12 +106,17 @@ def extract_product_specs(
     )
 
     if is_dummy_key:
-        extracted = _heuristic_fallback_extract(raw_desc, manufacturer)
+        extracted = _heuristic_fallback_extract(
+            raw_desc=raw_desc,
+            manufacturer=manufacturer,
+            manufacturer_context=manufacturer_context,
+        )
         return extracted, 0.85, "heuristic_fallback"
 
     system_prompt = (
         "You are an industrial catalog specialist for the NS-CIE extraction engine. "
-        "Extract structured technical parameters from the product description into JSON. "
+        "Extract structured technical parameters from the product description and manufacturer datasheet into JSON. "
+        "Ground your extraction strictly on the provided text without hallucinating facts. "
         "Return ONLY a valid JSON object matching the exact schema without explanations, markdown headers, or chatter:\n"
         "{\n"
         '  "brand": string or null,\n'
@@ -120,7 +132,9 @@ def extract_product_specs(
 
     user_prompt = f"Product Description: {raw_desc}"
     if manufacturer:
-        user_prompt += f"\nKnown Manufacturer: {manufacturer}"
+        user_prompt += f"\nCanonical Brand: {manufacturer}"
+    if manufacturer_context:
+        user_prompt += f"\nManufacturer Datasheet Grounding Context:\n{manufacturer_context[:1000]}"
 
     try:
         client = OpenAI(
@@ -142,7 +156,6 @@ def extract_product_specs(
         )
 
         content = response.choices[0].message.content or ""
-        # Clean possible markdown block wrappers
         content_clean = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
         parsed_json = json.loads(content_clean)
 
@@ -162,5 +175,9 @@ def extract_product_specs(
         logger.warning(
             f"LLM extraction failed ({e}); switching to deterministic heuristic fallback"
         )
-        fallback = _heuristic_fallback_extract(raw_desc, manufacturer)
+        fallback = _heuristic_fallback_extract(
+            raw_desc=raw_desc,
+            manufacturer=manufacturer,
+            manufacturer_context=manufacturer_context,
+        )
         return fallback, 0.80, f"fallback_extracted: {str(e)[:50]}"
