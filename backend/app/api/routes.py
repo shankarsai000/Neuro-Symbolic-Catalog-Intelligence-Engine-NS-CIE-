@@ -30,7 +30,7 @@ from app.core.schema_validator import validate_252_column_dataframe
 from app.data.master_repository import master_data_repository
 from app.db.database import get_db
 from app.db.models import BatchJob, BenchmarkRun, Product, ReviewQueue
-from app.worker.batch_worker import BATCH_RESULTS_CACHE, enqueue_batch_job
+from app.worker.batch_worker import BATCH_RESULTS_CACHE, enqueue_batch_job, job_queue_manager
 
 router = APIRouter()
 
@@ -418,6 +418,37 @@ async def download_batch_252_csv(batch_id: int) -> Response:
             "Content-Disposition": f"attachment; filename=NS-CIE_Batch_{batch_id}_Delivery_252_Columns.csv"
         },
     )
+
+
+@router.post("/api/batches/{batch_id}/cancel")
+async def cancel_batch_job(
+    batch_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Gracefully cancel an active batch catalog processing job."""
+    query = select(BatchJob).where(BatchJob.id == batch_id)
+    result = await db.execute(query)
+    batch = result.scalar_one_or_none()
+
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch job not found")
+
+    job_queue_manager.cancel_job(batch_id)
+    batch.status = "cancelled"
+    await db.commit()
+
+    return {"batch_id": batch_id, "status": "cancelled", "message": "Batch cancellation request received"}
+
+
+@router.get("/api/batches/{batch_id}/failures")
+async def get_batch_failures(batch_id: int) -> dict[str, Any]:
+    """Retrieve recorded failure diagnostics for a batch job."""
+    failures = job_queue_manager.get_failures(batch_id)
+    return {
+        "batch_id": batch_id,
+        "failure_count": len(failures),
+        "failures": failures,
+    }
 
 
 # ------------------ BENCHMARK & SCHEMA VALIDATION APIS ------------------ #
