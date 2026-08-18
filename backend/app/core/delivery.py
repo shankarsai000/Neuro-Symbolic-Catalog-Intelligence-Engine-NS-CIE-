@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import logging
 from pathlib import Path
 from typing import Any, Optional
@@ -21,51 +22,66 @@ DELIVERY_FORMAT_CSV_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "Unihack_ Expected Output - Delivery Format.csv"
 )
 
-# Load canonical 252-column headers
-def _load_delivery_headers() -> list[str]:
-    if DELIVERY_FORMAT_CSV_PATH.exists():
-        try:
-            with open(DELIVERY_FORMAT_CSV_PATH, "r", encoding="utf-8", errors="ignore") as f:
-                reader = csv.reader(f)
-                headers = next(reader)
-                if len(headers) == 252:
-                    return headers
-        except Exception as e:
-            logger.warning(f"Error reading delivery format headers: {e}")
 
-    # Fallback to standard 252 header list template
-    headers = [
-        "MFR URL", "Ref URL 1", "Ref URL 2", "Ref URL 3", "Ref URL 4", "Ref URL 5",
-        "PART_NUMBER", "Dept", "Class", "Fine", "SKU - MY_PART_NUMBER", "Mfg_Part_Num",
-        "Part_Desc", "E1_Brand", "Unilog_Brand", "DIB_Brand", "Part_Manuf",
-        "MANUFACTURER_NAME", "BRAND_NAME", "TRADE_NAME", "MANUFACTURER_PART_NUMBER",
-        "ALTERNATE_PART_NUMBER", "Classpath", "MOBILE_DESC", "INVOICE_DESC",
-        "SHORT_DESC", "LONG_DESC1", "RETAIL_DESC", "MARKETING_DESCRIPTION",
+class ExpectedSchema:
+    """Canonical 252-Column Unilog Schema Definition and Metadata."""
+
+    @staticmethod
+    def load_columns() -> list[str]:
+        if DELIVERY_FORMAT_CSV_PATH.exists():
+            try:
+                with open(DELIVERY_FORMAT_CSV_PATH, "r", encoding="utf-8", errors="ignore") as f:
+                    reader = csv.reader(f)
+                    headers = next(reader)
+                    if len(headers) == 252:
+                        return headers
+            except Exception as e:
+                logger.warning(f"Error reading delivery format headers: {e}")
+
+        # Fallback canonical 252 header list
+        headers = [
+            "MFR URL", "Ref URL 1", "Ref URL 2", "Ref URL 3", "Ref URL 4", "Ref URL 5",
+            "PART_NUMBER", "Dept", "Class", "Fine", "SKU - MY_PART_NUMBER", "Mfg_Part_Num",
+            "Part_Desc", "E1_Brand", "Unilog_Brand", "DIB_Brand", "Part_Manuf",
+            "MANUFACTURER_NAME", "BRAND_NAME", "TRADE_NAME", "MANUFACTURER_PART_NUMBER",
+            "ALTERNATE_PART_NUMBER", "Classpath", "MOBILE_DESC", "INVOICE_DESC",
+            "SHORT_DESC", "LONG_DESC1", "RETAIL_DESC", "MARKETING_DESCRIPTION",
+        ]
+        for i in range(1, 21):
+            headers.append(f"ITEM_FEATURES_{i}")
+        headers.extend(["With", "Standard/Approvals", "Prop 65", "Application", "Includes", "Product Name"])
+        for i in range(1, 51):
+            headers.extend([f"ATTRIBUTE_LABEL {i}", f"ATTRIBUTE_VALUE {i}", f"ATTRIBUTE_UOM {i}"])
+        headers.extend([
+            "UPC", "EAN", "GTIN", "UNSPSC", "Warranty", "List Price", "Selling Qty",
+            "Selling UOM", "Standard Packaging Information", "LENGTH", "LENGTH_UOM",
+            "HEIGHT", "HEIGHT_UOM", "WIDTH", "WIDTH_UOM", "WEIGHT", "WEIGHT_UOM",
+            "VOLUME", "VOLUME_UOM", "Product Image", "Alternate Image 1",
+            "Alternate Image 2", "Alternate Image 3", "Alternate Image 4", "SDS",
+            "SDS_1", "Warranty Information", "Catalog", "Specification Sheet",
+            "Instruction/Installation Manual", "Service Manual", "Owners/User Manual",
+            "Line Drawing", "MTR", "RoHS", "Full Engineering Drawing",
+            "Energy Star Guide", "Technical Bulletin", "Submittal", "Compatibility Chart",
+            "Size Chart", "Product Label/Insert", "Video Link", "Video Link 1",
+            "Country Of Origin", "Discontinued", "Actual Image (Yes/No)",
+        ])
+        return headers
+
+    REQUIRED_COLUMNS: list[str] = [
+        "PART_NUMBER",
+        "Mfg_Part_Num",
+        "Part_Desc",
+        "MANUFACTURER_NAME",
+        "BRAND_NAME",
+        "MANUFACTURER_PART_NUMBER",
+        "INVOICE_DESC",
+        "MOBILE_DESC",
+        "Product Name",
+        "Actual Image (Yes/No)",
     ]
-    # Features 1..20
-    for i in range(1, 21):
-        headers.append(f"ITEM_FEATURES_{i}")
-    headers.extend(["With", "Standard/Approvals", "Prop 65", "Application", "Includes", "Product Name"])
-    # Attributes 1..50 (Label, Value, UOM)
-    for i in range(1, 51):
-        headers.extend([f"ATTRIBUTE_LABEL {i}", f"ATTRIBUTE_VALUE {i}", f"ATTRIBUTE_UOM {i}"])
-    headers.extend([
-        "UPC", "EAN", "GTIN", "UNSPSC", "Warranty", "List Price", "Selling Qty",
-        "Selling UOM", "Standard Packaging Information", "LENGTH", "LENGTH_UOM",
-        "HEIGHT", "HEIGHT_UOM", "WIDTH", "WIDTH_UOM", "WEIGHT", "WEIGHT_UOM",
-        "VOLUME", "VOLUME_UOM", "Product Image", "Alternate Image 1",
-        "Alternate Image 2", "Alternate Image 3", "Alternate Image 4", "SDS",
-        "SDS_1", "Warranty Information", "Catalog", "Specification Sheet",
-        "Instruction/Installation Manual", "Service Manual", "Owners/User Manual",
-        "Line Drawing", "MTR", "RoHS", "Full Engineering Drawing",
-        "Energy Star Guide", "Technical Bulletin", "Submittal", "Compatibility Chart",
-        "Size Chart", "Product Label/Insert", "Video Link", "Video Link 1",
-        "Country Of Origin", "Discontinued", "Actual Image (Yes/No)"
-    ])
-    return headers
 
 
-DELIVERY_HEADERS: list[str] = _load_delivery_headers()
+DELIVERY_HEADERS: list[str] = ExpectedSchema.load_columns()
 
 
 def build_channel_descriptions(
@@ -73,15 +89,7 @@ def build_channel_descriptions(
     mpn: str,
     attrs: ExtractedAttributes | dict[str, Any],
 ) -> dict[str, str]:
-    """Generate multi-channel descriptions adhering strictly to Unilog delivery rules.
-
-    Channels:
-    1. INVOICE_DESC: <= 40 chars, ALL CAPS ([ITEM_TYPE] [MOUNTING] [MATERIAL] [VOLTAGE] [DIMENSIONS]).
-    2. MOBILE_DESC: 60-80 chars ([MFR_NAME] [BRAND], [ITEM_TYPE], [SERIES], [MPN]).
-    3. PRODUCT_TITLE: [BRAND®] [SERIES] [MPN] [ITEM_TYPE] With [FEATURES].
-    4. LONG_DESC: Full structured catalog paragraph with normalized UOM units.
-    5. SHORT_DESC: Concise B2B overview string.
-    """
+    """Generate multi-channel descriptions adhering strictly to Unilog delivery rules."""
     if isinstance(attrs, dict):
         item_type = attrs.get("item_type")
         voltage = attrs.get("voltage")
@@ -98,67 +106,69 @@ def build_channel_descriptions(
         raw_specs = attrs.raw_specs
 
     clean_brand = brand.strip() if brand else "UNASSIGNED"
-    clean_mpn = mpn.strip() if mpn else ""
-    clean_type = item_type.strip() if item_type else "Product"
+    clean_type = item_type.strip() if item_type else "Commercial Product"
+    clean_mpn = mpn.strip()
 
-    # Channel 1: Invoice Description (<= 40 chars, ALL CAPS)
-    invoice_tokens: list[str] = []
-    if item_type:
-        invoice_tokens.append(item_type)
+    # 1. INVOICE_DESC: <= 40 chars, ALL CAPS
+    inv_components = [clean_type]
     if mounting:
-        invoice_tokens.append(mounting)
+        inv_components.append(mounting)
     if material:
-        mat_token = "SST" if "stainless" in material.lower() else material
-        invoice_tokens.append(mat_token)
+        inv_components.append(material)
     if voltage:
-        invoice_tokens.append(voltage)
+        inv_components.append(voltage)
     if dimensions:
-        invoice_tokens.append(dimensions)
+        inv_components.append(dimensions)
 
-    raw_invoice = " ".join(invoice_tokens) if invoice_tokens else f"{clean_type} {clean_mpn}"
+    raw_invoice = " ".join(inv_components)
     invoice_desc = format_invoice_desc(raw_invoice)
 
-    # Channel 2: Mobile Description (Calibrated strictly to 60-80 characters)
-    mobile_base = f"{clean_brand}, {clean_type}, {clean_mpn}"
-    if material and len(mobile_base) + len(material) + 2 <= 75:
-        mobile_base += f", {material}"
-    if voltage and len(mobile_base) + len(voltage) + 2 <= 75:
-        mobile_base += f", {voltage}"
-    if dimensions and len(mobile_base) + len(dimensions) + 2 <= 75:
-        mobile_base += f", {dimensions}"
+    # 2. MOBILE_DESC: 60-80 chars
+    mobile_parts = [clean_brand, clean_type, clean_mpn]
+    if voltage and len(", ".join(mobile_parts)) + len(voltage) + 2 <= 78:
+        mobile_parts.append(voltage)
+    if dimensions and len(", ".join(mobile_parts)) + len(dimensions) + 2 <= 78:
+        mobile_parts.append(dimensions)
 
-    # Pad or trim to ensure target 60-80 character bracket
-    if len(mobile_base) < 60:
-        padding = f" - Premium Grade {clean_type}"
-        mobile_base = (mobile_base + padding)[:78]
-    elif len(mobile_base) > 80:
-        mobile_base = mobile_base[:80].rsplit(" ", 1)[0]
+    base_mobile = ", ".join(mobile_parts)
+    if len(base_mobile) < 60:
+        base_mobile = f"{base_mobile} - Commercial Grade {clean_type}"
+    mobile_desc = base_mobile[:80].strip()
 
-    mobile_desc = mobile_base
-
-    # Channel 3: Product Name / Title
-    features = raw_specs.get("features") or raw_specs.get("application") or "Standard Accessories"
-    product_title = f"{clean_brand} {clean_mpn} {clean_type} With {features}".strip()
-
-    # Channel 4: Long Description (Structured Paragraph)
-    specs_list = []
-    if voltage:
-        specs_list.append(f"{voltage} Rating")
-    if dimensions:
-        specs_list.append(f"Dimensions {dimensions}")
-    if mounting:
-        specs_list.append(f"{mounting} Mounting")
+    # 3. PRODUCT_TITLE: [BRAND] [MPN] [ITEM_TYPE]
+    title_parts = [clean_brand, clean_mpn, clean_type]
     if material:
-        specs_list.append(f"Constructed from {material}")
+        title_parts.append(f"in {material}")
+    if dimensions:
+        title_parts.append(f"({dimensions})")
+    product_title = " ".join(title_parts)
 
-    specs_sentence = ", ".join(specs_list) if specs_list else "Standard industrial specifications"
-    long_desc = (
-        f"{clean_brand} {clean_mpn} {clean_type}. Engineered for demanding commercial and industrial applications. "
-        f"Key Specifications: {specs_sentence}."
-    )
+    # 4. LONG_DESC: Full structured paragraph
+    long_desc_lines = [
+        f"The {clean_brand} {clean_mpn} is a commercial-grade {clean_type.lower()} designed for professional and industrial applications.",
+    ]
+    if voltage or dimensions or material:
+        specs_summary = []
+        if material:
+            specs_summary.append(f"durable {material.lower()} construction")
+        if voltage:
+            specs_summary.append(f"rated for {voltage}")
+        if dimensions:
+            specs_summary.append(f"measuring {dimensions}")
+        long_desc_lines.append(f"Engineered with {', '.join(specs_summary)}.")
 
-    # Channel 5: Short Description
-    short_desc = f"{clean_brand} {clean_mpn} {clean_type}, {specs_sentence}"[:100]
+    if raw_specs:
+        spec_items = [f"{k}: {v}" for k, v in raw_specs.items()]
+        long_desc_lines.append(f"Key Specifications include {'; '.join(spec_items)}.")
+
+    long_desc = " ".join(long_desc_lines)
+
+    # 5. SHORT_DESC: Concise summary
+    short_desc = f"{clean_brand} {clean_mpn} {clean_type}"
+    if voltage:
+        short_desc += f", {voltage}"
+    if dimensions:
+        short_desc += f", {dimensions}"
 
     return {
         "invoice_desc": invoice_desc,
@@ -169,66 +179,125 @@ def build_channel_descriptions(
     }
 
 
+class SchemaMapper:
+    """Maps enriched product specifications into the exact 252-column Unilog delivery dictionary."""
+
+    @staticmethod
+    def map_to_252_column_record(
+        raw_req: EnrichmentRequest,
+        canonical_brand: str,
+        attrs: ExtractedAttributes,
+        descriptions: dict[str, str],
+        confidence: float = 1.0,
+    ) -> dict[str, Any]:
+        record: dict[str, Any] = {col: "" for col in DELIVERY_HEADERS}
+
+        clean_mpn = raw_req.mfg_part_num.strip()
+        brand_final = canonical_brand or attrs.brand or ""
+        manuf_final = brand_final.replace("®", "").replace("™", "").strip()
+
+        # Core Identification
+        record["PART_NUMBER"] = clean_mpn
+        record["Mfg_Part_Num"] = clean_mpn
+        record["Part_Desc"] = clean_placeholders(raw_req.part_desc) or raw_req.part_desc
+        record["SKU - MY_PART_NUMBER"] = clean_mpn
+        record["MANUFACTURER_PART_NUMBER"] = clean_mpn
+
+        # Brand / Manufacturer Fields
+        record["E1_Brand"] = brand_final
+        record["Unilog_Brand"] = brand_final
+        record["DIB_Brand"] = brand_final
+        record["Part_Manuf"] = manuf_final
+        record["MANUFACTURER_NAME"] = manuf_final
+        record["BRAND_NAME"] = brand_final
+        record["TRADE_NAME"] = brand_final
+
+        # Multi-Channel Descriptions
+        record["INVOICE_DESC"] = descriptions.get("invoice_desc", "")
+        record["MOBILE_DESC"] = descriptions.get("mobile_desc", "")
+        record["SHORT_DESC"] = descriptions.get("short_desc", "")
+        record["LONG_DESC1"] = descriptions.get("long_desc", "")
+        record["RETAIL_DESC"] = descriptions.get("product_title", "")
+        record["MARKETING_DESCRIPTION"] = descriptions.get("long_desc", "")
+        record["Product Name"] = descriptions.get("product_title", "")
+
+        # Default Metadata
+        record["Actual Image (Yes/No)"] = "Yes"
+        record["Selling Qty"] = "1"
+        record["Selling UOM"] = "EA"
+        record["Country Of Origin"] = "US"
+        record["Discontinued"] = "No"
+
+        # Map Extracted Specs to Attributes 1..50 (starting with Voltage, Dimensions, Material, Mounting, Item Type)
+        slot = 1
+        spec_mappings = [
+            ("Voltage", attrs.voltage, "V" if attrs.voltage else None),
+            ("Dimensions", attrs.dimensions, "in" if attrs.dimensions else None),
+            ("Mounting", attrs.mounting, None),
+            ("Material", attrs.material, None),
+            ("Item Type", attrs.item_type, None),
+        ]
+
+        for label, val, default_uom in spec_mappings:
+            if val and slot <= 50:
+                val_str = str(val)
+                # If UOM is embedded in value (e.g. "120 V"), extract clean value and UOM
+                if default_uom and val_str.endswith(f" {default_uom}"):
+                    val_clean = val_str[:-len(f" {default_uom}")].strip()
+                    uom_clean = default_uom
+                else:
+                    val_clean = val_str
+                    uom_clean = default_uom or ""
+
+                record[f"ATTRIBUTE_LABEL {slot}"] = label
+                record[f"ATTRIBUTE_VALUE {slot}"] = val_clean
+                record[f"ATTRIBUTE_UOM {slot}"] = uom_clean
+                slot += 1
+
+        # Additional raw_specs
+        for k, v in attrs.raw_specs.items():
+            if slot <= 50:
+                record[f"ATTRIBUTE_LABEL {slot}"] = k
+                record[f"ATTRIBUTE_VALUE {slot}"] = str(v)
+                record[f"ATTRIBUTE_UOM {slot}"] = ""
+                slot += 1
+
+        # Features 1..20
+        feat_idx = 1
+        if attrs.material and feat_idx <= 20:
+            record[f"ITEM_FEATURES_{feat_idx}"] = f"Constructed with high-grade {attrs.material}"
+            feat_idx += 1
+        if attrs.voltage and feat_idx <= 20:
+            record[f"ITEM_FEATURES_{feat_idx}"] = f"Operates at standard {attrs.voltage}"
+            feat_idx += 1
+        if attrs.dimensions and feat_idx <= 20:
+            record[f"ITEM_FEATURES_{feat_idx}"] = f"Precision dimensions: {attrs.dimensions}"
+            feat_idx += 1
+
+        return record
+
+
 def generate_252_column_record(
     raw_req: EnrichmentRequest,
     canonical_brand: str,
     attrs: ExtractedAttributes,
     descriptions: dict[str, str],
     confidence: float = 1.0,
-) -> dict[str, str]:
-    """Generate a single standardized record conforming to the static 252-column schema."""
-    # Initialize all 252 columns with empty strings
-    record: dict[str, str] = {col: "" for col in DELIVERY_HEADERS}
-
-    # Populate core mapped delivery fields
-    record["PART_NUMBER"] = raw_req.mfg_part_num
-    record["Mfg_Part_Num"] = raw_req.mfg_part_num
-    record["Part_Desc"] = raw_req.part_desc
-    record["Part_Manuf"] = raw_req.raw_manuf or canonical_brand
-    record["MANUFACTURER_NAME"] = canonical_brand or raw_req.raw_manuf or ""
-    record["BRAND_NAME"] = canonical_brand
-    record["MANUFACTURER_PART_NUMBER"] = raw_req.mfg_part_num
-    record["MOBILE_DESC"] = descriptions.get("mobile_desc", "")
-    record["INVOICE_DESC"] = descriptions.get("invoice_desc", "")
-    record["SHORT_DESC"] = descriptions.get("short_desc", "")
-    record["LONG_DESC1"] = descriptions.get("long_desc", "")
-    record["Product Name"] = descriptions.get("product_title", "")
-    record["Actual Image (Yes/No)"] = "Yes"
-
-    # Populate standard attributes
-    attr_idx = 1
-    if attrs.voltage:
-        record[f"ATTRIBUTE_LABEL {attr_idx}"] = "Voltage Rating"
-        record[f"ATTRIBUTE_VALUE {attr_idx}"] = attrs.voltage.replace(" V", "").replace("V", "").strip()
-        record[f"ATTRIBUTE_UOM {attr_idx}"] = "V"
-        attr_idx += 1
-
-    if attrs.dimensions:
-        record[f"ATTRIBUTE_LABEL {attr_idx}"] = "Size"
-        record[f"ATTRIBUTE_VALUE {attr_idx}"] = attrs.dimensions
-        record[f"ATTRIBUTE_UOM {attr_idx}"] = "in" if "in" in attrs.dimensions.lower() else ""
-        attr_idx += 1
-
-    if attrs.material:
-        record[f"ATTRIBUTE_LABEL {attr_idx}"] = "Material"
-        record[f"ATTRIBUTE_VALUE {attr_idx}"] = attrs.material
-        attr_idx += 1
-
-    if attrs.mounting:
-        record[f"ATTRIBUTE_LABEL {attr_idx}"] = "Mounting Type"
-        record[f"ATTRIBUTE_VALUE {attr_idx}"] = attrs.mounting
-        attr_idx += 1
-
-    for k, v in attrs.raw_specs.items():
-        if attr_idx <= 50 and v:
-            record[f"ATTRIBUTE_LABEL {attr_idx}"] = str(k).title()
-            record[f"ATTRIBUTE_VALUE {attr_idx}"] = str(v)
-            attr_idx += 1
-
-    return record
+) -> dict[str, Any]:
+    return SchemaMapper.map_to_252_column_record(
+        raw_req=raw_req,
+        canonical_brand=canonical_brand,
+        attrs=attrs,
+        descriptions=descriptions,
+        confidence=confidence,
+    )
 
 
-def export_dataframe_to_252_csv(records: list[dict[str, str]]) -> str:
-    """Convert a list of 252-column records into CSV string representation."""
-    df = pd.DataFrame(records, columns=DELIVERY_HEADERS)
-    return df.to_csv(index=False, quoting=csv.QUOTE_MINIMAL)
+def export_dataframe_to_252_csv(df: pd.DataFrame | list[dict[str, Any]]) -> str:
+    """Export DataFrame or list of dictionary records as a strictly formatted, CSV-safe 252-column text payload."""
+    if isinstance(df, list):
+        df = pd.DataFrame(df)
+    output = io.StringIO()
+    aligned_df = df.reindex(columns=DELIVERY_HEADERS, fill_value="")
+    aligned_df.to_csv(output, index=False, quoting=csv.QUOTE_MINIMAL)
+    return output.getvalue()
