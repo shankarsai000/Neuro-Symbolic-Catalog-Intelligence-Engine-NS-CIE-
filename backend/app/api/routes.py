@@ -3,11 +3,13 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.ai.schemas import EnrichmentRequest, EnrichmentResponse
 from app.core.guardrails import (
     decimal_to_fraction,
     enforce_uom_spacing,
     format_invoice_desc,
 )
+from app.core.pipeline import run_enrichment_pipeline
 from app.core.sanitizer import clean_placeholders
 
 router = APIRouter()
@@ -42,14 +44,7 @@ async def health_check() -> HealthResponse:
 
 @router.post("/api/test-guardrails", response_model=GuardrailsTestResponse)
 async def test_guardrails(payload: GuardrailsTestRequest) -> GuardrailsTestResponse:
-    """Process raw input text through Unilog deterministic guardrails.
-
-    Pipeline execution sequence:
-    1. clean_placeholders (strips -- Unbranded --, -- No Unilog Brand --, etc.)
-    2. enforce_uom_spacing (ensures 24in -> 24 in, 120v -> 120 V)
-    3. decimal_to_fraction (converts 50.25 in -> 50-1/4 in)
-    4. format_invoice_desc (previews 40-char max ALL-CAPS invoice description)
-    """
+    """Process raw input text through Unilog deterministic guardrails."""
     raw = payload.raw_text
 
     # Step 1: Placeholder sanitization
@@ -72,3 +67,9 @@ async def test_guardrails(payload: GuardrailsTestRequest) -> GuardrailsTestRespo
         final_result=fractional,
         invoice_desc_preview=invoice_desc,
     )
+
+
+@router.post("/api/enrich-single", response_model=EnrichmentResponse)
+async def enrich_single(payload: EnrichmentRequest) -> EnrichmentResponse:
+    """Execute zero-shot AI extraction and deterministic guardrail enrichment for a single catalog record."""
+    return run_enrichment_pipeline(payload)
