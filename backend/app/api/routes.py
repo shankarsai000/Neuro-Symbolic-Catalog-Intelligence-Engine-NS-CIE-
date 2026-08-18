@@ -202,6 +202,19 @@ async def enrich_batch(
 
 # ------------------ BATCH JOBS & UPLOAD APIS ------------------ #
 
+MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB limit
+ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
+
+
+def _decode_csv_bytes(content: bytes) -> str:
+    """Multi-encoding decoder for robust CSV ingestion."""
+    for enc in ["utf-8-sig", "utf-8", "cp1252", "iso-8859-1", "latin1"]:
+        try:
+            return content.decode(enc)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return content.decode("utf-8", errors="replace")
+
 
 @router.post("/api/batches")
 async def create_batch_job(
@@ -225,7 +238,7 @@ async def upload_batch_file(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Upload CSV or XLSX dataset and trigger background batch processing."""
+    """Upload CSV or XLSX dataset, validate encoding & schema, and trigger background chunked processing."""
     query = select(BatchJob).where(BatchJob.id == batch_id)
     result = await db.execute(query)
     batch = result.scalar_one_or_none()
@@ -233,41 +246,83 @@ async def upload_batch_file(
     if not batch:
         raise HTTPException(status_code=404, detail="Batch job not found")
 
-    content = await file.read()
     filename = file.filename or "uploaded.csv"
+    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file extension '{ext}'. Only CSV and Excel (.xlsx, .xls) files are supported.",
+        )
 
-    # Parse uploaded file
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="File size exceeds maximum 50 MB upload limit")
+
+    # Parse uploaded file with multi-encoding resilience
     items: list[EnrichmentRequest] = []
+    seen_mpns: set[str] = set()
+    duplicate_count = 0
+    malformed_count = 0
+
     try:
-        if filename.endswith(".xlsx") or filename.endswith(".xls"):
+        if ext in [".xlsx", ".xls"]:
             df = pd.read_excel(io.BytesIO(content), dtype=str)
         else:
-            df = pd.read_csv(io.StringIO(content.decode("utf-8", errors="ignore")), dtype=str)
+            decoded_text = _decode_csv_bytes(content)
+            df = pd.read_csv(io.StringIO(decoded_text), dtype=str)
 
-        for _, row in df.iterrows():
-            mpn = str(row.get("Mfg_Part_Num") or row.get("PART_NUMBER") or row.get("MPN") or "").strip()
-            desc = str(row.get("Part_Desc") or row.get("Description") or "").strip()
-            manuf = str(row.get("Part_Manuf") or row.get("Manufacturer") or "").strip()
+        def _clean_cell(val: Any) -> str:
+            if pd.isna(val):
+                return ""
+            s = str(val).strip()
+            if s.lower() in ["nan", "none", "null"]:
+                return ""
+            return s
 
-            if mpn and desc:
-                items.append(EnrichmentRequest(mfg_part_num=mpn, part_desc=desc, raw_manuf=manuf))
+        for row_idx, row in df.iterrows():
+            mpn = _clean_cell(row.get("Mfg_Part_Num") or row.get("PART_NUMBER") or row.get("MPN") or row.get("Part_Number"))
+            desc = _clean_cell(row.get("Part_Desc") or row.get("Description") or row.get("PART_DESC"))
+            manuf = _clean_cell(row.get("Part_Manuf") or row.get("Manufacturer") or row.get("PART_MANUF"))
+
+            # Handle malformed / empty rows
+            if not mpn and not desc:
+                malformed_count += 1
+                continue
+
+            if not mpn:
+                mpn = f"AUTO-GEN-{row_idx + 1}"
+            if not desc:
+                desc = mpn
+
+            # Duplicate detection
+            mpn_key = mpn.upper()
+            if mpn_key in seen_mpns:
+                duplicate_count += 1
+            else:
+                seen_mpns.add(mpn_key)
+
+            items.append(EnrichmentRequest(mfg_part_num=mpn, part_desc=desc, raw_manuf=manuf or None))
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse catalog file: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to parse catalog dataset: {str(e)}")
 
     if not items:
-        raise HTTPException(status_code=400, detail="No valid catalog records found in file")
+        raise HTTPException(status_code=400, detail="No valid catalog records found in uploaded file")
 
     batch.total_items = len(items)
     batch.status = "processing"
     await db.commit()
 
-    # Enqueue background processing worker
+    # Enqueue background chunked worker
     enqueue_batch_job(batch_id, items)
 
     return {
         "batch_id": batch_id,
         "filename": filename,
         "total_records_queued": len(items),
+        "unique_mpns": len(seen_mpns),
+        "duplicates_detected": duplicate_count,
+        "malformed_rows_skipped": malformed_count,
         "status": "processing",
     }
 
@@ -331,10 +386,21 @@ async def get_batch_progress(
 
 
 @router.get("/api/batches/{batch_id}/results")
-async def get_batch_results(batch_id: int) -> dict[str, Any]:
-    """Retrieve processed results array for a batch job."""
+async def get_batch_results(
+    batch_id: int,
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    """Retrieve processed results array for a batch job with pagination."""
     results = BATCH_RESULTS_CACHE.get(batch_id, [])
-    return {"batch_id": batch_id, "results_count": len(results), "items": results}
+    paginated = results[offset : offset + limit]
+    return {
+        "batch_id": batch_id,
+        "total_results": len(results),
+        "limit": limit,
+        "offset": offset,
+        "items": paginated,
+    }
 
 
 @router.get("/api/batches/{batch_id}/download")
