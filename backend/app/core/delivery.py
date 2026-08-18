@@ -89,7 +89,7 @@ def build_channel_descriptions(
     mpn: str,
     attrs: ExtractedAttributes | dict[str, Any],
 ) -> dict[str, str]:
-    """Generate multi-channel descriptions adhering strictly to Unilog delivery rules."""
+    """Generate multi-channel descriptions adhering strictly to Unilog category-specialized rules."""
     if isinstance(attrs, dict):
         item_type = attrs.get("item_type")
         voltage = attrs.get("voltage")
@@ -109,25 +109,92 @@ def build_channel_descriptions(
     clean_type = item_type.strip() if item_type else "Commercial Product"
     clean_mpn = mpn.strip()
 
-    # 1. INVOICE_DESC: <= 40 chars, ALL CAPS
+    # Extract specialized specs
+    flow_rate = raw_specs.get("FlowRate")
+    conn_type = raw_specs.get("ConnectionType")
+    press_rating = raw_specs.get("PressureRating")
+    finish = raw_specs.get("Finish")
+    grit = raw_specs.get("Grit")
+    arbor = raw_specs.get("ArborSize")
+    pack_qty = raw_specs.get("PackQuantity")
+    amperage = raw_specs.get("Amperage")
+    sound_level = raw_specs.get("SoundLevel")
+
+    # Determine Category Strategy
+    type_lower = clean_type.lower()
+    is_faucet = "faucet" in type_lower
+    is_fitting = any(f in type_lower for f in ["fitting", "elbow", "tee", "coupling", "adapter", "union", "nipple", "flange"])
+    is_abrasive = any(a in type_lower for a in ["disc", "belt", "wheel", "blade", "cut-off", "cutoff", "abrasive", "grinding"])
+    is_appliance = any(ap in type_lower for ap in ["dishwasher", "washer", "dryer", "refrigerator", "range", "oven"])
+
+    # 1. INVOICE_DESC Generation
     inv_components = [clean_type]
-    if mounting:
-        inv_components.append(mounting)
-    if material:
-        inv_components.append(material)
-    if voltage:
-        inv_components.append(voltage)
-    if dimensions:
-        inv_components.append(dimensions)
+
+    if is_faucet:
+        if mounting:
+            inv_components.append(mounting)
+        if flow_rate:
+            inv_components.append(flow_rate)
+        if finish:
+            inv_components.append(finish)
+        elif material:
+            inv_components.append(material)
+    elif is_fitting:
+        if dimensions:
+            inv_components.append(dimensions)
+        if conn_type:
+            inv_components.append(conn_type)
+        if material:
+            inv_components.append(material)
+        if press_rating:
+            inv_components.append(press_rating)
+    elif is_abrasive:
+        if dimensions:
+            inv_components.append(dimensions)
+        if arbor:
+            inv_components.append(arbor)
+        if grit:
+            inv_components.append(grit)
+        elif material:
+            inv_components.append(material)
+        if pack_qty:
+            inv_components.append(pack_qty)
+    elif is_appliance:
+        if mounting:
+            inv_components.append(mounting)
+        if material:
+            inv_components.append(material)
+        if voltage:
+            inv_components.append(voltage)
+        if amperage:
+            inv_components.append(amperage)
+        if sound_level:
+            inv_components.append(sound_level)
+    else:
+        # Standard general commercial
+        if mounting:
+            inv_components.append(mounting)
+        if material:
+            inv_components.append(material)
+        if voltage:
+            inv_components.append(voltage)
+        if dimensions:
+            inv_components.append(dimensions)
 
     raw_invoice = " ".join(inv_components)
     invoice_desc = format_invoice_desc(raw_invoice)
 
-    # 2. MOBILE_DESC: 60-80 chars
+    # 2. MOBILE_DESC Generation (60-80 chars)
     mobile_parts = [clean_brand, clean_type, clean_mpn]
-    if voltage and len(", ".join(mobile_parts)) + len(voltage) + 2 <= 78:
+    if is_faucet and flow_rate:
+        mobile_parts.append(flow_rate)
+    if is_fitting and conn_type:
+        mobile_parts.append(conn_type)
+    if is_abrasive and grit:
+        mobile_parts.append(grit)
+    if voltage:
         mobile_parts.append(voltage)
-    if dimensions and len(", ".join(mobile_parts)) + len(dimensions) + 2 <= 78:
+    if dimensions:
         mobile_parts.append(dimensions)
 
     base_mobile = ", ".join(mobile_parts)
@@ -135,26 +202,37 @@ def build_channel_descriptions(
         base_mobile = f"{base_mobile} - Commercial Grade {clean_type}"
     mobile_desc = base_mobile[:80].strip()
 
-    # 3. PRODUCT_TITLE: [BRAND] [MPN] [ITEM_TYPE]
+    # 3. PRODUCT_TITLE Generation
     title_parts = [clean_brand, clean_mpn, clean_type]
-    if material:
+    if finish:
+        title_parts.append(f"in {finish}")
+    elif material:
         title_parts.append(f"in {material}")
     if dimensions:
         title_parts.append(f"({dimensions})")
+    elif flow_rate:
+        title_parts.append(f"({flow_rate})")
     product_title = " ".join(title_parts)
 
-    # 4. LONG_DESC: Full structured paragraph
+    # 4. LONG_DESC Generation
     long_desc_lines = [
         f"The {clean_brand} {clean_mpn} is a commercial-grade {clean_type.lower()} designed for professional and industrial applications.",
     ]
-    if voltage or dimensions or material:
-        specs_summary = []
-        if material:
-            specs_summary.append(f"durable {material.lower()} construction")
-        if voltage:
-            specs_summary.append(f"rated for {voltage}")
-        if dimensions:
-            specs_summary.append(f"measuring {dimensions}")
+    specs_summary = []
+    if material:
+        specs_summary.append(f"durable {material.lower()} construction")
+    if finish:
+        specs_summary.append(f"{finish.lower()} finish")
+    if voltage:
+        specs_summary.append(f"rated for {voltage}")
+    if dimensions:
+        specs_summary.append(f"measuring {dimensions}")
+    if flow_rate:
+        specs_summary.append(f"delivering {flow_rate}")
+    if conn_type:
+        specs_summary.append(f"with {conn_type} connection")
+
+    if specs_summary:
         long_desc_lines.append(f"Engineered with {', '.join(specs_summary)}.")
 
     if raw_specs:
@@ -163,12 +241,15 @@ def build_channel_descriptions(
 
     long_desc = " ".join(long_desc_lines)
 
-    # 5. SHORT_DESC: Concise summary
-    short_desc = f"{clean_brand} {clean_mpn} {clean_type}"
+    # 5. SHORT_DESC Generation
+    short_parts = [clean_brand, clean_mpn, clean_type]
     if voltage:
-        short_desc += f", {voltage}"
+        short_parts.append(voltage)
     if dimensions:
-        short_desc += f", {dimensions}"
+        short_parts.append(dimensions)
+    if flow_rate:
+        short_parts.append(flow_rate)
+    short_desc = ", ".join(short_parts)
 
     return {
         "invoice_desc": invoice_desc,
@@ -228,7 +309,7 @@ class SchemaMapper:
         record["Country Of Origin"] = "US"
         record["Discontinued"] = "No"
 
-        # Map Extracted Specs to Attributes 1..50 (starting with Voltage, Dimensions, Material, Mounting, Item Type)
+        # Map Extracted Specs to Attributes 1..50
         slot = 1
         spec_mappings = [
             ("Voltage", attrs.voltage, "V" if attrs.voltage else None),
@@ -238,10 +319,29 @@ class SchemaMapper:
             ("Item Type", attrs.item_type, None),
         ]
 
+        # Add specialized specs from raw_specs to high-priority slots
+        raw_specs = attrs.raw_specs or {}
+        if "FlowRate" in raw_specs:
+            spec_mappings.append(("Flow Rate", raw_specs["FlowRate"], "GPM"))
+        if "ConnectionType" in raw_specs:
+            spec_mappings.append(("Connection Type", raw_specs["ConnectionType"], None))
+        if "PressureRating" in raw_specs:
+            spec_mappings.append(("Pressure Rating", raw_specs["PressureRating"], "PSI" if "PSI" in raw_specs["PressureRating"] else "LB"))
+        if "Finish" in raw_specs:
+            spec_mappings.append(("Finish", raw_specs["Finish"], None))
+        if "Grit" in raw_specs:
+            spec_mappings.append(("Grit", raw_specs["Grit"], None))
+        if "ArborSize" in raw_specs:
+            spec_mappings.append(("Arbor Size", raw_specs["ArborSize"], "in"))
+        if "Amperage" in raw_specs:
+            spec_mappings.append(("Amperage", raw_specs["Amperage"], "A"))
+        if "SoundLevel" in raw_specs:
+            spec_mappings.append(("Sound Level", raw_specs["SoundLevel"], "dBA"))
+
         for label, val, default_uom in spec_mappings:
             if val and slot <= 50:
                 val_str = str(val)
-                # If UOM is embedded in value (e.g. "120 V"), extract clean value and UOM
+                # If UOM is embedded in value (e.g. "120 V", "1.5 GPM"), extract clean value and UOM
                 if default_uom and val_str.endswith(f" {default_uom}"):
                     val_clean = val_str[:-len(f" {default_uom}")].strip()
                     uom_clean = default_uom
@@ -254,9 +354,10 @@ class SchemaMapper:
                 record[f"ATTRIBUTE_UOM {slot}"] = uom_clean
                 slot += 1
 
-        # Additional raw_specs
-        for k, v in attrs.raw_specs.items():
-            if slot <= 50:
+        # Additional raw_specs not already mapped
+        already_mapped = {"FlowRate", "ConnectionType", "PressureRating", "Finish", "Grit", "ArborSize", "Amperage", "SoundLevel"}
+        for k, v in raw_specs.items():
+            if k not in already_mapped and slot <= 50:
                 record[f"ATTRIBUTE_LABEL {slot}"] = k
                 record[f"ATTRIBUTE_VALUE {slot}"] = str(v)
                 record[f"ATTRIBUTE_UOM {slot}"] = ""
@@ -272,6 +373,12 @@ class SchemaMapper:
             feat_idx += 1
         if attrs.dimensions and feat_idx <= 20:
             record[f"ITEM_FEATURES_{feat_idx}"] = f"Precision dimensions: {attrs.dimensions}"
+            feat_idx += 1
+        if "FlowRate" in raw_specs and feat_idx <= 20:
+            record[f"ITEM_FEATURES_{feat_idx}"] = f"Flow rate: {raw_specs['FlowRate']}"
+            feat_idx += 1
+        if "ConnectionType" in raw_specs and feat_idx <= 20:
+            record[f"ITEM_FEATURES_{feat_idx}"] = f"Standard {raw_specs['ConnectionType']} connection"
             feat_idx += 1
 
         return record

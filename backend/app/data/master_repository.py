@@ -349,6 +349,9 @@ class MasterDataRepository:
             "pc": "PC", "piece": "PC", "pieces": "PC",
             "ea": "EA", "each": "EA",
             "deg": "°", "degree": "°", "degrees": "°",
+            "gpm": "GPM", "gal/min": "GPM",
+            "psi": "PSI", "psig": "PSI",
+            "grit": "Grit",
         }
         for r, s in standard_uoms.items():
             self.uoms.add_uom_rule(r, s)
@@ -369,24 +372,59 @@ class MasterDataRepository:
         # 5. Master Taxonomy List of Values (LOVs)
         taxonomy_lovs = {
             "item_type": [
-                "Dishwasher", "Cut-Off Disc", "Sanding Belt", "Abrasive Disc",
-                "Saw Blade", "Drill Bit", "Switch", "Receptacle", "Wire", "Cable",
+                # Appliances
+                "Dishwasher", "Built-In Dishwasher", "Commercial Dishwasher",
+                "Refrigerator", "Range", "Oven", "Washing Machine", "Dryer", "Water Heater",
+                # Abrasives & Cutting Tools
+                "Cut-Off Disc", "Cut-Off Wheel", "Sanding Belt", "Abrasive Disc",
+                "Saw Blade", "Grinding Wheel", "Flap Disc", "Wire Wheel", "Drill Bit", "Carbide Bur",
+                # Faucets
+                "Faucet", "Kitchen Faucet", "Lavatory Faucet", "Commercial Faucet",
+                "Pre-Rinse Faucet", "Utility Faucet", "Bar Faucet",
+                # Fittings
+                "Pipe Fitting", "Tube Fitting", "Elbow", "Tee", "Coupling",
+                "Adapter", "Union", "Nipple", "Bushing", "Reducer", "Cap", "Plug", "Flange",
+                # General Electrical & Industrial
+                "Switch", "Receptacle", "Wire", "Cable",
                 "Luminaire", "Light Bulb", "Safety Glasses", "Measuring Tape",
                 "Pocket Hole Jig", "Router Bit", "Fastener", "Screw", "Connector"
             ],
             "mounting": [
-                "Built-In", "Freestanding", "Leg", "Under-Counter", "Wall Mount",
+                "Built-In", "Freestanding", "Leg", "Undercounter", "Wall Mount",
                 "Panel Mount", "Surface Mount", "Flush Mount", "Ceiling Mount",
-                "Direct Bury", "Track Mount"
+                "Direct Bury", "Track Mount", "Deck Mount", "Centerset", "Widespread", "Single Hole"
             ],
             "material": [
-                "Stainless Steel", "SST", "Aluminum", "Carbon Steel", "Brass",
-                "Copper", "Plastic", "Ceramic", "Zirconia", "Carbide", "Bi-Metal",
-                "PVC", "Polycarbonate", "Rubber", "Cast Iron"
+                "Stainless Steel", "SST", "Aluminum", "Carbon Steel", "Brass", "Solid Brass",
+                "Chrome Plated Brass", "Copper", "Plastic", "Ceramic", "Zirconia", "Zirconia Alumina",
+                "Carbide", "High Speed Steel", "Bi-Metal", "Aluminum Oxide", "Silicon Carbide", "Diamond",
+                "PVC", "CPVC", "PEX", "Polycarbonate", "Rubber", "Cast Iron", "Ductile Iron", "Malleable Iron"
             ],
             "voltage": [
                 "120 V", "240 V", "208 V", "277 V", "480 V", "12 V", "18 V",
                 "20 V", "60 V", "120/240 V"
+            ],
+            "flow_rate": [
+                "0.5 GPM", "1.0 GPM", "1.2 GPM", "1.5 GPM", "1.8 GPM", "2.0 GPM", "2.2 GPM"
+            ],
+            "connection_type": [
+                "NPT", "MNPT", "FNPT", "Threaded", "Compression", "Socket Weld",
+                "Butt Weld", "Flanged", "Push-to-Connect", "Soldered", "Press"
+            ],
+            "pressure_rating": [
+                "125 LB", "150 LB", "150 PSI", "300 LB", "300 PSI", "600 PSI",
+                "1000 PSI", "2000 PSI", "3000 PSI"
+            ],
+            "finish": [
+                "Chrome", "Polished Chrome", "Brushed Nickel", "Matte Black",
+                "Stainless Steel", "Brass", "Oil Rubbed Bronze"
+            ],
+            "grit": [
+                "P36", "P40", "P60", "P80", "P120", "P150", "P180", "P220",
+                "P320", "P400", "P600", "36 Grit", "60 Grit", "80 Grit", "120 Grit"
+            ],
+            "arbor_size": [
+                "1/4 in", "3/8 in", "1/2 in", "5/8 in", "7/8 in", "1 in", "20 mm", "5/8-11 in"
             ]
         }
         for cat, vals in taxonomy_lovs.items():
@@ -402,6 +440,13 @@ class MasterDataRepository:
             ("Color", "string", False),
             ("Amperage", "uom_value", False, "A"),
             ("Wattage", "uom_value", False, "W"),
+            ("Flow Rate", "uom_value", False, "GPM"),
+            ("Connection Type", "string", False),
+            ("Connection Size", "uom_value", False, "in"),
+            ("Pressure Rating", "uom_value", False, "PSI"),
+            ("Finish", "string", False),
+            ("Grit", "string", False),
+            ("Arbor Size", "uom_value", False, "in"),
         ]
         for name, dtype, req, *extra in schema_attributes:
             uom = extra[0] if extra else None
