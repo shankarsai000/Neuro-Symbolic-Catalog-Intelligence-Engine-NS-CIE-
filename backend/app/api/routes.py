@@ -35,10 +35,14 @@ from app.worker.batch_worker import BATCH_RESULTS_CACHE, enqueue_batch_job
 router = APIRouter()
 
 
+from app.ai.nvidia_client import model_health_check
+
+
 class HealthResponse(BaseModel):
     status: str = Field(..., examples=["NS-CIE Backend Active"])
     engine: str = Field(default="Neuro-Symbolic Catalog Intelligence Engine (NS-CIE)")
     version: str = Field(default="1.0.0")
+    nvidia_nim: Optional[dict[str, Any]] = Field(default=None, description="NVIDIA NIM model health & discovery")
 
 
 class SystemMetricsResponse(BaseModel):
@@ -50,6 +54,7 @@ class SystemMetricsResponse(BaseModel):
     master_brands_count: int
     master_uom_count: int
     active_batch_jobs: int
+    nvidia_nim: Optional[dict[str, Any]] = None
 
 
 class GuardrailsTestRequest(BaseModel):
@@ -82,11 +87,13 @@ class BenchmarkRunRequest(BaseModel):
 @router.get("/health", response_model=HealthResponse)
 @router.get("/api/system/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Return backend operational status."""
+    """Return backend operational status with NVIDIA NIM model identity."""
+    nim_status = await model_health_check.check_health()
     return HealthResponse(
         status="NS-CIE Backend Active",
         engine="Neuro-Symbolic Catalog Intelligence Engine (NS-CIE)",
         version="1.0.0",
+        nvidia_nim=nim_status,
     )
 
 
@@ -99,17 +106,19 @@ async def system_metrics(db: AsyncSession = Depends(get_db)) -> SystemMetricsRes
     except Exception:
         db_status = "local_sqlite_fallback"
 
-    llm_status = settings.LLM_MODEL_NAME if settings.LLM_API_KEY else "offline_heuristic"
+    nim_health = await model_health_check.check_health()
+    llm_status = settings.nvidia_model if settings.nvidia_api_key else "offline_heuristic"
 
     return SystemMetricsResponse(
         status="HEALTHY",
         database=db_status,
         redis="connected_or_asyncio_queue",
         llm_model=llm_status,
-        source_mode_default="OFFLINE_HEURISTIC" if not settings.LLM_API_KEY else "LIVE_NIM",
+        source_mode_default="OFFLINE_HEURISTIC" if not settings.nvidia_api_key else "LIVE_NIM",
         master_brands_count=len(master_data_repository.canonical_brands),
         master_uom_count=len(master_data_repository.uom_standards),
         active_batch_jobs=len(BATCH_RESULTS_CACHE),
+        nvidia_nim=nim_health,
     )
 
 
