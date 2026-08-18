@@ -344,3 +344,93 @@ class AuditEvent(Base):
         Index("idx_audit_events_type_entity", "event_type", "entity_type", "entity_id"),
         Index("idx_audit_events_timestamp", "timestamp"),
     )
+
+
+# =========================================================================
+# Phase 3: Master Data Tables (Taxonomies, Brands, UOMs, LOVs, Standards)
+# =========================================================================
+
+class MasterManufacturer(Base):
+    __tablename__ = "master_manufacturers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    raw_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+    brands: Mapped[list["MasterBrand"]] = relationship(
+        "MasterBrand", back_populates="manufacturer", cascade="all, delete-orphan"
+    )
+
+
+class MasterBrand(Base):
+    __tablename__ = "master_brands"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    canonical_name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    manufacturer_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("master_manufacturers.id", ondelete="SET NULL"), nullable=True
+    )
+    aliases_json: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+    manufacturer: Mapped[Optional["MasterManufacturer"]] = relationship(
+        "MasterManufacturer", back_populates="brands"
+    )
+
+    __table_args__ = (
+        Index("idx_master_brands_canonical", "canonical_name"),
+    )
+
+
+class MasterUOM(Base):
+    __tablename__ = "master_uoms"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    raw_uom: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    standard_uom: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
+    dimension_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # length, voltage, amperage, weight
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class MasterFraction(Base):
+    __tablename__ = "master_fractions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    decimal_val: Mapped[float] = mapped_column(Float, unique=True, index=True, nullable=False)
+    fraction_str: Mapped[str] = mapped_column(String(32), nullable=False)
+    precision_32nd: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class MasterCategoryLOV(Base):
+    __tablename__ = "master_category_lovs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    category: Mapped[str] = mapped_column(String(128), index=True, nullable=False)  # item_type, mounting, material, voltage
+    attribute_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    lov_value: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    __table_args__ = (
+        Index("idx_master_lov_cat_val", "category", "lov_value"),
+    )
+
+
+class MasterAttributeDefinition(Base):
+    __tablename__ = "master_attribute_definitions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    attribute_name: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
+    data_type: Mapped[str] = mapped_column(String(64), default="string", nullable=False)  # string, number, uom_value, boolean
+    is_required: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    default_uom: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+

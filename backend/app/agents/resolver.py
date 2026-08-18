@@ -2,37 +2,12 @@ from __future__ import annotations
 
 import re
 from typing import Optional
-from rapidfuzz import fuzz, process, utils
-
 from app.core.sanitizer import clean_placeholders
+from app.data.master_repository import master_data_repository
 
-# Master list representing UniCat_Manufacturer_and_Brand_List.xlsx legal entity names
-MASTER_CANONICAL_BRANDS: list[str] = [
-    "FRIGIDAIRE®",
-    "WHIRLPOOL®",
-    "KOHLER®",
-    "GE APPLIANCES",
-    "MILWAUKEE®",
-    "3M™",
-    "FREUD®",
-    "DIABLO®",
-    "MIRKA®",
-    "DEWALT®",
-    "RHEEM®",
-    "BOSCH®",
-    "MAKITA®",
-    "CRAFTSMAN®",
-    "DELTA®",
-    "MOEN®",
-    "SCHNEIDER ELECTRIC™",
-    "EATON®",
-    "SIEMENS®",
-    "SQUARE D™",
-]
-
-# Supplier code & noise pattern (e.g. '(2435)', '(MIRUS)', 'LLC', 'Inc', 'Co')
+# Supplier code & noise pattern (e.g. '(2435)', '(MIRUS)', 'LLC', 'Inc', 'Co', 'Tools', 'Supply')
 SUPPLIER_NOISE_REGEX = re.compile(
-    r"\s*(?:\(\w+\)|LLC|Inc\.?|Corp\.?|Co\.?|Supply|Accessory)\b",
+    r"\s*(?:\(\w+\)|LLC|Inc\.?|Corp\.?|Co\.?|Supply|Accessory|Tools?|Company|Products?)\b",
     re.IGNORECASE,
 )
 
@@ -40,19 +15,22 @@ SUPPLIER_NOISE_REGEX = re.compile(
 def resolve_canonical_brand(raw_brand: Optional[str], score_cutoff: float = 80.0) -> str:
     """Fuzzy-match raw or supplier brand names to official Unilog canonical entity standards.
 
+    Driven entirely by the MasterDataRepository / BrandRepository without hardcoded production lists.
+
     Examples:
         'frigid air' -> 'FRIGIDAIRE®'
-        'Freud Inc (2435)' -> 'FREUD®'
-        'Milwaukee Accessory (4031)' -> 'MILWAUKEE®'
-        'Mirka Abrasives Inc (MIRUS)' -> 'MIRKA®'
-        'Unknown Custom Tools Co' -> 'Unknown Custom Tools'
+        'Freud Inc' -> 'FREUD®'
+        'Milwaukee Accessory' -> 'MILWAUKEE®'
+        'Mirka Abrasives' -> 'MIRKA®'
+        'Unknown Custom Tools Co' -> 'Unknown Custom Tools' (unresolved)
 
     Args:
         raw_brand: Raw manufacturer or brand string from supplier.
-        score_cutoff: Minimum RapidFuzz match similarity score (0-100). Default 80.0.
+        score_cutoff: Minimum similarity score cutoff (0-100). Default 80.0.
 
     Returns:
-        Canonical legal brand name if matched, else sanitized title-cased brand string.
+        Canonical legal brand name if matched with confidence >= score_cutoff,
+        else cleaned unforced query string.
     """
     if not raw_brand:
         return ""
@@ -66,31 +44,13 @@ def resolve_canonical_brand(raw_brand: Optional[str], score_cutoff: float = 80.0
     if not query:
         query = sanitized
 
-    # Direct / token fuzzy match with standard text preprocessor
-    best_match = process.extractOne(
-        query,
-        MASTER_CANONICAL_BRANDS,
-        processor=utils.default_process,
-        scorer=fuzz.WRatio,
-        score_cutoff=score_cutoff,
+    # Query BrandRepository dynamically from MasterDataRepository
+    canonical, score = master_data_repository.resolve_canonical_brand(
+        query, score_cutoff=score_cutoff
     )
 
-    if best_match:
-        matched_brand, score, _ = best_match
-        return matched_brand
+    if score > 0.0:
+        return canonical
 
-    # Fallback to token_set_ratio with default_process
-    token_match = process.extractOne(
-        query,
-        MASTER_CANONICAL_BRANDS,
-        processor=utils.default_process,
-        scorer=fuzz.token_set_ratio,
-        score_cutoff=score_cutoff,
-    )
-
-    if token_match:
-        matched_brand, score, _ = token_match
-        return matched_brand
-
-    # If no high-confidence match found, return cleaned query
+    # If no high-confidence match found, return unforced query
     return query.strip()
