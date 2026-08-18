@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.reviews import router as reviews_router
 from app.api.routes import router as core_router
+from app.core.observability import ObservabilityMiddleware
 from app.db.database import init_db
 
 
@@ -22,6 +23,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.add_middleware(ObservabilityMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

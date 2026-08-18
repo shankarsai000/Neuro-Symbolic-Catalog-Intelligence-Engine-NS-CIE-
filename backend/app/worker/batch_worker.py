@@ -40,6 +40,10 @@ class JobQueueManager:
         self._redis_client = None
         self._is_redis_available = False
 
+    @property
+    def is_redis_available(self) -> bool:
+        return self._is_redis_available
+
     async def initialize(self) -> None:
         """Attempt connection to Redis with graceful fallback to in-memory store."""
         try:

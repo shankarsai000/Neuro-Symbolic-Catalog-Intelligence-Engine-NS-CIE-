@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 import io
 from typing import Any, Optional
 import pandas as pd
@@ -38,10 +39,23 @@ router = APIRouter()
 from app.ai.nvidia_client import model_health_check
 
 
+from app.core.observability import evaluate_system_health, telemetry_collector
+
+
+class ComponentHealth(BaseModel):
+    status: str
+    details: Optional[dict[str, Any]] = None
+
+
 class HealthResponse(BaseModel):
-    status: str = Field(..., examples=["NS-CIE Backend Active"])
+    status: str = Field(..., examples=["HEALTHY", "DEGRADED", "UNHEALTHY"])
     engine: str = Field(default="Neuro-Symbolic Catalog Intelligence Engine (NS-CIE)")
     version: str = Field(default="1.0.0")
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    components: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Distinguished status for database, redis, worker, llm, and manufacturer sourcing",
+    )
     nvidia_nim: Optional[dict[str, Any]] = Field(default=None, description="NVIDIA NIM model health & discovery")
 
 
@@ -55,6 +69,7 @@ class SystemMetricsResponse(BaseModel):
     master_uom_count: int
     active_batch_jobs: int
     nvidia_nim: Optional[dict[str, Any]] = None
+    telemetry: Optional[dict[str, Any]] = None
 
 
 class GuardrailsTestRequest(BaseModel):
@@ -88,19 +103,22 @@ class BenchmarkRunRequest(BaseModel):
 @router.get("/health", response_model=HealthResponse)
 @router.get("/api/system/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Return backend operational status with NVIDIA NIM model identity."""
+    """Return backend operational status with component-level differentiation (database, redis, worker, llm, manufacturer_sourcing)."""
+    health_data = await evaluate_system_health()
     nim_status = await model_health_check.check_health()
     return HealthResponse(
-        status="NS-CIE Backend Active",
+        status=health_data["status"],
         engine="Neuro-Symbolic Catalog Intelligence Engine (NS-CIE)",
         version="1.0.0",
+        timestamp=health_data["timestamp"],
+        components=health_data["components"],
         nvidia_nim=nim_status,
     )
 
 
 @router.get("/api/system/metrics", response_model=SystemMetricsResponse)
 async def system_metrics(db: AsyncSession = Depends(get_db)) -> SystemMetricsResponse:
-    """Return real-time health, LOV counts, database connection, and system status."""
+    """Return real-time telemetry metrics, latencies, cache rates, and system status."""
     db_status = "connected"
     try:
         await db.execute(select(Product).limit(1))
@@ -109,6 +127,7 @@ async def system_metrics(db: AsyncSession = Depends(get_db)) -> SystemMetricsRes
 
     nim_health = await model_health_check.check_health()
     llm_status = settings.nvidia_model if settings.nvidia_api_key else "offline_heuristic"
+    telemetry_snapshot = telemetry_collector.get_metrics_snapshot()
 
     return SystemMetricsResponse(
         status="HEALTHY",
@@ -120,6 +139,7 @@ async def system_metrics(db: AsyncSession = Depends(get_db)) -> SystemMetricsRes
         master_uom_count=len(master_data_repository.uom_standards),
         active_batch_jobs=len(BATCH_RESULTS_CACHE),
         nvidia_nim=nim_health,
+        telemetry=telemetry_snapshot,
     )
 
 

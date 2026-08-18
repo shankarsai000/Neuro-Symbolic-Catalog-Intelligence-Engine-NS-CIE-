@@ -24,6 +24,14 @@ from app.core.guardrails import (
     enforce_uom_spacing,
     format_invoice_desc,
 )
+from app.core.observability import (
+    current_batch_id,
+    current_product_id,
+    current_request_id,
+    telemetry_collector,
+    trace_stage_async,
+    trace_stage_sync,
+)
 from app.core.sanitizer import clean_placeholders
 from app.data.master_repository import master_data_repository
 from app.db.models import (
@@ -41,7 +49,7 @@ async def run_enrichment_pipeline(
     db: Optional[AsyncSession] = None,
     batch_job_id: Optional[int] = None,
 ) -> EnrichmentResponse:
-    """Execute the end-to-end production NS-CIE pipeline adhering to all 18 mission criteria:
+    """Execute the end-to-end production NS-CIE pipeline adhering to all mission criteria with full observability:
 
     1. Input sanitization of placeholder noise.
     2. Master brand resolution against official legal standards.
@@ -55,35 +63,51 @@ async def run_enrichment_pipeline(
     10. 252-column Unilog record delivery mapping & persistence.
     """
     start_time = time.perf_counter()
+    if batch_job_id is not None:
+        current_batch_id.set(batch_job_id)
 
-    # Step 1: Placeholder sanitization on input strings
-    sanitized_desc = clean_placeholders(request.part_desc) or request.part_desc
-    raw_manuf_clean = clean_placeholders(request.raw_manuf)
+    # Step 1: Placeholder sanitization & canonical brand resolution
+    with trace_stage_sync("SANITIZATION_AND_BRAND_RESOLUTION", metadata={"mpn": request.mfg_part_num}):
+        sanitized_desc = clean_placeholders(request.part_desc) or request.part_desc
+        raw_manuf_clean = clean_placeholders(request.raw_manuf)
+        canonical_brand, brand_score = master_data_repository.resolve_canonical_brand(raw_manuf_clean)
 
-    # Step 2: Canonical brand resolution
-    canonical_brand, brand_score = master_data_repository.resolve_canonical_brand(raw_manuf_clean)
+    # Step 2: Category Detection & Schema Resolution
+    with trace_stage_sync("CATEGORY_DETECTION", metadata={"mpn": request.mfg_part_num}):
+        category_schema = category_detector.detect(
+            raw_desc=sanitized_desc,
+            mpn=request.mfg_part_num,
+            manufacturer=canonical_brand,
+        )
 
-    # Step 3: Category Detection & Schema Resolution
-    category_schema = category_detector.detect(
-        raw_desc=sanitized_desc,
-        mpn=request.mfg_part_num,
-        manufacturer=canonical_brand,
+    # Step 3: Official Manufacturer Sourcing
+    mfg_start = time.perf_counter()
+    async with trace_stage_async("MANUFACTURER_SOURCING", metadata={"brand": canonical_brand, "mpn": request.mfg_part_num}):
+        sourced_evidence = await fetch_official_manufacturer_specs(
+            canonical_brand=canonical_brand,
+            mpn=request.mfg_part_num,
+        )
+    mfg_duration_ms = (time.perf_counter() - mfg_start) * 1000.0
+    telemetry_collector.record_manufacturer_fetch(
+        duration_ms=mfg_duration_ms,
+        from_cache=(sourced_evidence.source_type == "CACHE"),
     )
 
-    # Step 4: Official Manufacturer Sourcing
-    sourced_evidence = await fetch_official_manufacturer_specs(
-        canonical_brand=canonical_brand,
-        mpn=request.mfg_part_num,
-    )
-
-    # Step 5: Category-Aware Extraction
-    raw_attributes, source_mode = extract_product_specs(
-        raw_desc=sanitized_desc,
-        manufacturer=canonical_brand or None,
-        category=category_schema.name,
-        allowed_lovs=list(category_schema.allowed_lovs.get("item_type", [])),
-        manufacturer_evidence=sourced_evidence.extracted_text or None,
-        mpn=request.mfg_part_num,
+    # Step 4: Category-Aware Extraction
+    llm_start = time.perf_counter()
+    with trace_stage_sync("EXTRACTION", metadata={"category": category_schema.name, "mpn": request.mfg_part_num}):
+        raw_attributes, source_mode = extract_product_specs(
+            raw_desc=sanitized_desc,
+            manufacturer=canonical_brand or None,
+            category=category_schema.name,
+            allowed_lovs=list(category_schema.allowed_lovs.get("item_type", [])),
+            manufacturer_evidence=sourced_evidence.extracted_text or None,
+            mpn=request.mfg_part_num,
+        )
+    llm_duration_ms = (time.perf_counter() - llm_start) * 1000.0
+    telemetry_collector.record_llm_latency(
+        duration_ms=llm_duration_ms,
+        is_live_nim=(source_mode == "LIVE_NIM"),
     )
 
     if canonical_brand:
@@ -93,33 +117,36 @@ async def run_enrichment_pipeline(
     if sourced_evidence.http_status == 200 and source_mode == "LIVE_NIM":
         source_mode = "MANUFACTURER_SOURCE"
 
-    # Step 6: Neuro-Symbolic Validation & Deterministic Synonym Normalization
-    validation_result = neuro_symbolic_validator.validate(
-        raw_attrs=raw_attributes,
-        schema=category_schema,
-        manufacturer_evidence=sourced_evidence.evidence_snippets,
-    )
+    # Step 5: Neuro-Symbolic Validation & Deterministic Synonym Normalization
+    with trace_stage_sync("NEURO_SYMBOLIC_VALIDATION", metadata={"category": category_schema.name}):
+        validation_result = neuro_symbolic_validator.validate(
+            raw_attrs=raw_attributes,
+            schema=category_schema,
+            manufacturer_evidence=sourced_evidence.evidence_snippets,
+        )
+        final_attributes = validation_result.normalized_output
 
-    final_attributes = validation_result.normalized_output
+    # Step 6: Multi-Channel Description Generation
+    with trace_stage_sync("GUARDRAIL_DESCRIPTIONS", metadata={"item_type": final_attributes.item_type}):
+        channel_dict = build_channel_descriptions(
+            brand=final_attributes.brand or canonical_brand,
+            mpn=final_attributes.mpn or request.mfg_part_num,
+            attrs=final_attributes,
+        )
+        channel_desc = ChannelDescriptions(**channel_dict)
 
-    # Step 7: Multi-Channel Description Generation
-    channel_dict = build_channel_descriptions(
-        brand=final_attributes.brand or canonical_brand,
-        mpn=final_attributes.mpn or request.mfg_part_num,
-        attrs=final_attributes,
-    )
-    channel_desc = ChannelDescriptions(**channel_dict)
+    # Step 7: Mathematical Confidence Calculation (Rule 6)
+    with trace_stage_sync("CONFIDENCE_SCORING", metadata={"mpn": request.mfg_part_num}):
+        confidence_breakdown = calculate_mathematical_confidence(
+            extracted_attrs=final_attributes.model_dump(),
+            invoice_desc=channel_desc.invoice_desc,
+            provenance_score=sourced_evidence.provenance_score,
+        )
+        if validation_result.needs_review:
+            confidence_breakdown.needs_review = True
 
-    # Step 8: Mathematical Confidence Calculation (Rule 6)
-    confidence_breakdown = calculate_mathematical_confidence(
-        extracted_attrs=final_attributes.model_dump(),
-        invoice_desc=channel_desc.invoice_desc,
-        provenance_score=sourced_evidence.provenance_score,
-    )
-
-    # Flag for review if neuro-symbolic validator reported violations
-    if validation_result.needs_review:
-        confidence_breakdown.needs_review = True
+    # Record HITL decision telemetry
+    telemetry_collector.record_hitl_decision(needs_review=confidence_breakdown.needs_review)
 
     # Step 8: Field-Level Provenance Mapping
     evidence_snippets = sourced_evidence.evidence_snippets
@@ -182,13 +209,15 @@ async def run_enrichment_pipeline(
     }
 
     # Step 9: Static 252-Column Unilog Schema Delivery Mapping
-    delivery_record = generate_252_column_record(
-        raw_req=request,
-        canonical_brand=final_attributes.brand or canonical_brand or "",
-        attrs=final_attributes,
-        descriptions=channel_dict,
-        confidence=confidence_breakdown.total_confidence,
-    )
+    with trace_stage_sync("SCHEMA_MAPPING", metadata={"mpn": request.mfg_part_num}):
+        delivery_record = generate_252_column_record(
+            raw_req=request,
+            canonical_brand=final_attributes.brand or canonical_brand or "",
+            attrs=final_attributes,
+            descriptions=channel_dict,
+            confidence=confidence_breakdown.total_confidence,
+        )
+        telemetry_collector.record_schema_validation(is_valid=(len(delivery_record) == 252))
 
     execution_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
@@ -205,6 +234,7 @@ async def run_enrichment_pipeline(
             )
             db.add(product)
             await db.flush()
+            current_product_id.set(product.id)
 
             # 2. Enrichment run record
             run = EnrichmentRun(

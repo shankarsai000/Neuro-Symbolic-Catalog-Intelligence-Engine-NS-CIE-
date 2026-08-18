@@ -59,6 +59,8 @@ async_session = async_sessionmaker(
     autoflush=False,
 )
 
+AsyncSessionLocal = async_session
+
 
 class Base(DeclarativeBase):
     pass
