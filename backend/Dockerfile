@@ -1,22 +1,20 @@
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
 WORKDIR /app
 
-RUN useradd --create-home --shell /usr/sbin/nologin appuser
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-COPY requirements.txt ./requirements.txt
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY app ./app
-COPY main.py ./main.py
-COPY tests ./tests
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN chown -R appuser:appuser /app
-USER appuser
+COPY . .
 
 EXPOSE 8000
 

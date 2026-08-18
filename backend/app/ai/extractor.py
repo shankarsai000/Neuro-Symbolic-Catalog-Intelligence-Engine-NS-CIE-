@@ -4,180 +4,198 @@ import json
 import logging
 import re
 from typing import Any, Optional
-
 from openai import OpenAI
 
 from app.ai.schemas import ExtractedAttributes
 from app.core.config import settings
+from app.data.master_repository import master_data_repository
 
 logger = logging.getLogger(__name__)
 
-# Heuristic patterns for robust fallback extraction
-VOLTAGE_REGEX = re.compile(r"\b(\d+(?:\.\d+)?\s*(?:v|volts?|kv))\b", re.IGNORECASE)
-DIMENSION_REGEX = re.compile(
-    r"\b(\d+(?:-\d+/\d+|\.\d+|/\d+)?\s*(?:in|inch(?:es)?|\"|ft|mm|cm|m|x|\'|by)\s*(?:\d+(?:-\d+/\d+|\.\d+|/\d+)?\s*(?:in|inch(?:es)?|\"|ft|mm|cm|m|\')*)?)\b",
-    re.IGNORECASE,
-)
-MATERIAL_REGEX = re.compile(
-    r"\b(stainless\s+steel|sst|ss|aluminum|brass|steel|copper|plastic|cast\s+iron|pvc|rubber|ceramic)\b",
-    re.IGNORECASE,
-)
-MOUNTING_REGEX = re.compile(
-    r"\b(leg|built-in|wall|ceiling|flush|surface|din\s*rail|freestanding)\s*(?:mount(?:ing)?)?\b",
-    re.IGNORECASE,
-)
-ITEM_TYPE_REGEX = re.compile(
-    r"\b(dishwasher|cut-off\s+disc|sanding\s+belt|disc|belt|blade|motor|pump|valve|switch|breaker|socket|drill|saw|sensor|filter|refrigerator|range|oven)\b",
-    re.IGNORECASE,
-)
 
-
-def _heuristic_fallback_extract(
+def _build_extraction_prompt(
     raw_desc: str,
     manufacturer: Optional[str] = None,
-    manufacturer_context: Optional[str] = None,
+    manufacturer_evidence: Optional[str] = None,
+) -> list[dict[str, str]]:
+    """Construct structured prompt adhering to Unilog catalog extraction and LOV rules."""
+    allowed_item_types = ", ".join(master_data_repository.get_allowed_lovs("item_type")[:15])
+    allowed_materials = ", ".join(master_data_repository.get_allowed_lovs("material")[:10])
+    allowed_mountings = ", ".join(master_data_repository.get_allowed_lovs("mounting")[:8])
+
+    system_content = f"""You are the core extraction engine of the Neuro-Symbolic Catalog Intelligence Engine (NS-CIE).
+Your task is to extract structured, commercial-grade product specifications from messy distributor catalog strings.
+
+RULES & CONSTRAINTS:
+1. Canonical Brand: Ground the brand to official manufacturer entities.
+2. Standard Item Types: Categorize into standard taxonomies (e.g. {allowed_item_types}).
+3. Standard Materials: Use standard terms (e.g. {allowed_materials}).
+4. Standard Mountings: Use standard terms (e.g. {allowed_mountings}).
+5. Preserve technical ratings (Voltage, Dimensions, Amperage, Grit, Pack Quantity).
+6. Output MUST be strictly valid JSON matching the schema below with no markdown formatting or markdown code blocks:
+
+SCHEMA:
+{{
+  "brand": string or null,
+  "item_type": string or null,
+  "mpn": string or null,
+  "voltage": string or null,
+  "dimensions": string or null,
+  "mounting": string or null,
+  "material": string or null,
+  "raw_specs": {{ "additional_key": "value" }}
+}}"""
+
+    user_content_lines = [f"Raw Catalog Description: {raw_desc}"]
+    if manufacturer:
+        user_content_lines.append(f"Supplier / Manufacturer: {manufacturer}")
+    if manufacturer_evidence:
+        user_content_lines.append(f"Official Manufacturer Datasheet Evidence:\n{manufacturer_evidence[:1000]}")
+
+    user_content = "\n".join(user_content_lines)
+
+    return [
+        {"role": "system", "content": system_content},
+        {"role": "user", "content": user_content},
+    ]
+
+
+def _extract_heuristic_fallback(
+    raw_desc: str,
+    manufacturer: Optional[str] = None,
 ) -> ExtractedAttributes:
-    """Fast deterministic rule-based extractor when LLM is unavailable."""
-    combined_text = f"{raw_desc} {manufacturer_context or ''}"
+    """Deterministic, pure-Python heuristic extractor for offline environments."""
+    text = raw_desc or ""
 
-    brand = manufacturer.strip() if manufacturer else None
+    # 1. Voltage pattern: e.g. 120v, 120 V, 240v
+    voltage_match = re.search(r"\b(\d{2,3}(?:\.\d+)?)\s*(?:v(?:olts?)?)\b", text, re.IGNORECASE)
+    voltage = f"{voltage_match.group(1)} V" if voltage_match else None
 
-    # Item Type
-    item_type_match = ITEM_TYPE_REGEX.search(combined_text)
-    item_type = item_type_match.group(1).title() if item_type_match else None
+    # 2. Dimensions pattern: require dimensional unit (in, ", ', ft, mm, cm) OR multi-dimension (x)
+    dim_match = re.search(
+        r"\b(\d+(?:[-/]\d+)?(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?|\"|\'|ft|mm|cm)(?:\s*[xX]\s*\d+(?:[-/]\d+)?(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?|\"|\'|ft|mm|cm)?)*)\b",
+        text,
+        re.IGNORECASE,
+    )
+    if not dim_match:
+        dim_match = re.search(
+            r"\b(\d+(?:[-/]\d+)?(?:\.\d+)?\s*[xX]\s*\d+(?:[-/]\d+)?(?:\.\d+)?(?:\s*[xX]\s*\d+(?:[-/]\d+)?(?:\.\d+)?)?)\b",
+            text,
+            re.IGNORECASE,
+        )
+    dimensions = dim_match.group(1).strip() if dim_match else None
 
-    # Voltage
-    volt_match = VOLTAGE_REGEX.search(combined_text)
-    voltage = volt_match.group(1) if volt_match else None
-
-    # Material
-    mat_match = MATERIAL_REGEX.search(combined_text)
-    material = mat_match.group(1).title() if mat_match else None
-    if material and material.lower() in ("ss", "sst"):
+    # 3. Material pattern
+    material = None
+    if re.search(r"\b(?:SS|Stainless(?:\s*Steel)?|SST)\b", text, re.IGNORECASE):
         material = "Stainless Steel"
+    elif re.search(r"\b(?:Aluminum|Alum)\b", text, re.IGNORECASE):
+        material = "Aluminum"
+    elif re.search(r"\b(?:Carbon(?:\s*Steel)?|Metal)\b", text, re.IGNORECASE):
+        material = "Carbon Steel"
 
-    # Mounting
-    mount_match = MOUNTING_REGEX.search(combined_text)
-    mounting = mount_match.group(1).title() if mount_match else None
+    # 4. Mounting pattern
+    mounting = None
+    if re.search(r"\bBuilt[- ]?in\b", text, re.IGNORECASE):
+        mounting = "Built-In"
+    elif re.search(r"\bFreestanding\b", text, re.IGNORECASE):
+        mounting = "Freestanding"
+    elif re.search(r"\bLeg\b", text, re.IGNORECASE):
+        mounting = "Leg"
 
-    # Dimensions
-    dim_match = DIMENSION_REGEX.search(raw_desc) or DIMENSION_REGEX.search(combined_text)
-    dimensions = dim_match.group(1) if dim_match else None
+    # 5. Item Type classification
+    item_type = None
+    if re.search(r"\bDishwasher\b", text, re.IGNORECASE):
+        item_type = "Dishwasher"
+    elif re.search(r"\bCut[- ]?Off\s*Disc\b", text, re.IGNORECASE):
+        item_type = "Cut-Off Disc"
+    elif re.search(r"\bSanding\s*Belt\b", text, re.IGNORECASE):
+        item_type = "Sanding Belt"
+    elif re.search(r"\bAbrasive\s*Disc\b", text, re.IGNORECASE):
+        item_type = "Abrasive Disc"
+    elif re.search(r"\bBlade\b", text, re.IGNORECASE):
+        item_type = "Saw Blade"
+    elif re.search(r"\bBit\b", text, re.IGNORECASE):
+        item_type = "Drill Bit"
 
-    # Part number extraction
-    tokens = raw_desc.split()
-    mpn = tokens[0] if tokens and any(char.isdigit() for char in tokens[0]) else None
+    # 6. Additional Specs
+    raw_specs: dict[str, Any] = {}
+    amp_match = re.search(r"\b(\d+)\s*(?:a|amps?|amperage)\b", text, re.IGNORECASE)
+    if amp_match:
+        raw_specs["Amperage"] = f"{amp_match.group(1)} A"
+
+    dba_match = re.search(r"\b(\d+)\s*(?:dba|db)\b", text, re.IGNORECASE)
+    if dba_match:
+        raw_specs["SoundLevel"] = f"{dba_match.group(1)} dBA"
+
+    pack_match = re.search(r"\b(\d+)\s*(?:pc|pack|pk)\b", text, re.IGNORECASE)
+    if pack_match:
+        raw_specs["PackQuantity"] = f"{pack_match.group(1)} PK"
+
+    # 7. MPN extraction fallback
+    mpn_match = re.match(r"^([A-Z0-9\-]+)", text.strip())
+    mpn = mpn_match.group(1) if mpn_match else None
 
     return ExtractedAttributes(
-        brand=brand,
+        brand=manufacturer,
         item_type=item_type,
         mpn=mpn,
         voltage=voltage,
         dimensions=dimensions,
         mounting=mounting,
         material=material,
-        raw_specs={},
+        raw_specs=raw_specs,
     )
 
 
 def extract_product_specs(
     raw_desc: str,
     manufacturer: Optional[str] = None,
-    manufacturer_context: Optional[str] = None,
-) -> tuple[ExtractedAttributes, float, str]:
-    """Extract structured technical product parameters from unstructured catalog text.
-
-    Args:
-        raw_desc: Cleaned or raw catalog description string.
-        manufacturer: Optional manufacturer or supplier name.
-        manufacturer_context: Optional scraped datasheet context to ground extraction.
+    manufacturer_evidence: Optional[str] = None,
+) -> tuple[ExtractedAttributes, str]:
+    """Execute LLM extraction when valid credentials exist, or deterministic heuristic fallback.
 
     Returns:
-        tuple of (ExtractedAttributes, confidence_score, status_message)
+        (ExtractedAttributes, source_mode: "LIVE_NIM" | "OFFLINE_HEURISTIC")
     """
-    if not raw_desc or not raw_desc.strip():
-        return ExtractedAttributes(), 0.0, "empty_input"
-
-    # If dummy API key is configured or offline, use heuristic extractor directly
-    is_dummy_key = (
-        not settings.llm_api_key
-        or "dummy" in settings.llm_api_key.lower()
-        or settings.llm_api_key == "dummy_key_if_missing"
+    has_live_credentials = (
+        bool(settings.LLM_API_KEY)
+        and settings.LLM_API_KEY != "mock-api-key"
+        and not settings.LLM_API_KEY.startswith("dummy")
     )
 
-    if is_dummy_key:
-        extracted = _heuristic_fallback_extract(
-            raw_desc=raw_desc,
-            manufacturer=manufacturer,
-            manufacturer_context=manufacturer_context,
-        )
-        return extracted, 0.85, "heuristic_fallback"
+    if has_live_credentials:
+        try:
+            client = OpenAI(
+                base_url=settings.LLM_BASE_URL,
+                api_key=settings.LLM_API_KEY,
+                timeout=5.0,
+            )
+            messages = _build_extraction_prompt(
+                raw_desc=raw_desc,
+                manufacturer=manufacturer,
+                manufacturer_evidence=manufacturer_evidence,
+            )
 
-    system_prompt = (
-        "You are an industrial catalog specialist for the NS-CIE extraction engine. "
-        "Extract structured technical parameters from the product description and manufacturer datasheet into JSON. "
-        "Ground your extraction strictly on the provided text without hallucinating facts. "
-        "Return ONLY a valid JSON object matching the exact schema without explanations, markdown headers, or chatter:\n"
-        "{\n"
-        '  "brand": string or null,\n'
-        '  "item_type": string or null,\n'
-        '  "mpn": string or null,\n'
-        '  "voltage": string or null,\n'
-        '  "dimensions": string or null,\n'
-        '  "mounting": string or null,\n'
-        '  "material": string or null,\n'
-        '  "raw_specs": {}\n'
-        "}"
-    )
+            response = client.chat.completions.create(
+                model=settings.LLM_MODEL_NAME,
+                messages=messages,
+                temperature=0.0,
+                max_tokens=600,
+            )
 
-    user_prompt = f"Product Description: {raw_desc}"
-    if manufacturer:
-        user_prompt += f"\nCanonical Brand: {manufacturer}"
-    if manufacturer_context:
-        user_prompt += f"\nManufacturer Datasheet Grounding Context:\n{manufacturer_context[:1000]}"
+            content = response.choices[0].message.content or "{}"
+            # Strip markdown json code fences if present
+            cleaned_content = re.sub(r"^```(?:json)?\s*", "", content.strip(), flags=re.MULTILINE)
+            cleaned_content = re.sub(r"```$", "", cleaned_content.strip(), flags=re.MULTILINE)
 
-    try:
-        client = OpenAI(
-            api_key=settings.llm_api_key,
-            base_url=settings.llm_base_url,
-            timeout=15.0,
-        )
+            parsed_data = json.loads(cleaned_content)
+            extracted = ExtractedAttributes(**parsed_data)
+            return extracted, "LIVE_NIM"
 
-        response = client.chat.completions.create(
-            model=settings.llm_model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.0,
-            response_format={"type": "json_object"}
-            if "integrate.api.nvidia.com" in settings.llm_base_url
-            else None,
-        )
+        except Exception as e:
+            logger.warning(f"Live LLM call error: {e}. Falling back to OFFLINE_HEURISTIC.")
 
-        content = response.choices[0].message.content or ""
-        content_clean = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
-        parsed_json = json.loads(content_clean)
-
-        attributes = ExtractedAttributes(
-            brand=parsed_json.get("brand") or manufacturer,
-            item_type=parsed_json.get("item_type"),
-            mpn=parsed_json.get("mpn"),
-            voltage=parsed_json.get("voltage"),
-            dimensions=parsed_json.get("dimensions"),
-            mounting=parsed_json.get("mounting"),
-            material=parsed_json.get("material"),
-            raw_specs=parsed_json.get("raw_specs") or {},
-        )
-        return attributes, 0.98, "llm_extracted"
-
-    except Exception as e:
-        logger.warning(
-            f"LLM extraction failed ({e}); switching to deterministic heuristic fallback"
-        )
-        fallback = _heuristic_fallback_extract(
-            raw_desc=raw_desc,
-            manufacturer=manufacturer,
-            manufacturer_context=manufacturer_context,
-        )
-        return fallback, 0.80, f"fallback_extracted: {str(e)[:50]}"
+    # Rule 1 & Rule 9: Explicitly label offline heuristic
+    fallback_attributes = _extract_heuristic_fallback(raw_desc, manufacturer)
+    return fallback_attributes, "OFFLINE_HEURISTIC"

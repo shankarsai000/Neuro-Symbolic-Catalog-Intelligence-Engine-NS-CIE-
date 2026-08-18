@@ -31,5 +31,17 @@ class Settings(BaseSettings):
         description="LLM Model Name",
     )
 
+    @property
+    def LLM_API_KEY(self) -> str:
+        return self.llm_api_key
+
+    @property
+    def LLM_BASE_URL(self) -> str:
+        return self.llm_base_url
+
+    @property
+    def LLM_MODEL_NAME(self) -> str:
+        return self.llm_model_name
+
 
 settings = Settings()

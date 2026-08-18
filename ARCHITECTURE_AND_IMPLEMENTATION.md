@@ -1,147 +1,152 @@
 # Neuro-Symbolic Catalog Intelligence Engine (NS-CIE)
-## End-to-End System Architecture & Implementation Specification
+## Production System Architecture & Master Implementation Specification
 
 > **Repository**: [shankarsai000/Neuro-Symbolic-Catalog-Intelligence-Engine-NS-CIE-](https://github.com/shankarsai000/Neuro-Symbolic-Catalog-Intelligence-Engine-NS-CIE-)  
-> **Tech Stack**: Next.js 14/16 (App Router), FastAPI, Python 3.12+, Pydantic v2, RapidFuzz, OpenAI/NVIDIA NIM, BeautifulSoup4, Tailwind CSS, Lucide Icons.
+> **Production Stack**: Next.js 16 (App Router), FastAPI, PostgreSQL 16, Redis 7, SQLAlchemy 2.0 (Async), Pydantic v2, PyPDF, BeautifulSoup4, RapidFuzz, Docker Compose, Nginx.
 
 ---
 
 ## 1. Executive Summary & Objective
 
-**NS-CIE (Neuro-Symbolic Catalog Intelligence Engine)** is an enterprise-grade AI extraction and validation pipeline engineered to transform messy, unstructured distributor product feeds into strictly compliant, publication-ready multi-channel catalog deliverables.
+**NS-CIE (Neuro-Symbolic Catalog Intelligence Engine)** is an enterprise-grade, production-quality catalog intelligence and multi-channel delivery system engineered to transform raw distributor feeds into strictly compliant, verified catalog deliverables conforming to Unilog's static 252-column schema.
 
-### The Neuro-Symbolic Philosophy
-Traditional pure-LLM pipelines suffer from **hallucinations**, **inconsistent unit formatting** (e.g., `120v` vs `120 V`), and **non-deterministic string lengths**. NS-CIE solves this by pairing a **probabilistic Zero-Shot Large Language Model** (NVIDIA Nemotron / OpenAI) with a **deterministic, pure-Python Symbolic Validation Layer** (Regex engines, Master LOV tables, and RapidFuzz canonical entity resolvers). If an LLM outputs malformed fractions or invalid units, the symbolic layer intercepts and overrides the error deterministically.
+### Core Architectural Principles & Zero-Simulation Guarantee
+- **No Simulations**: Zero synthetic data, fake confidence values, or mock frontend fallbacks.
+- **Authoritative Backend**: Database and deterministic validation rules are the single source of truth.
+- **Mathematical Confidence**: Real formula-driven scoring based on provenance, LOV match, and rule compliance ($C = 0.40P + 0.35L + 0.25R$).
+- **Domain Allowlist Sourcing**: Only retrieves technical datasheets from approved, official manufacturer domains over HTTPS with size limits and redirect verification.
+- **Exact 252-Column Semantics**: Enforces exact header names, 252-column count, ordering, and required fields.
+- **Persistent HITL Triage**: Real PostgreSQL review queue for records with confidence $< 0.90$ with full human audit logging.
+
+---
+
+## 2. End-to-End System Architecture
 
 ```
                   ┌────────────────────────────────────────────────────────┐
-                  │           UNSTRUCTURED SUPPLIER FEED                   │
-                  │  "PDSH4816AF Dishwasher SS 120v 50.25in -- Unbranded --"│
+                  │                 RAW CSV / XLSX INGESTION               │
                   └───────────────────────────┬────────────────────────────┘
                                               │
                                               ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                             PHASE 2: PLACEHOLDER SANITIZER                                │
-│                     Strips: "-- Unbranded --", "-- No Unilog Brand --"                   │
+│                             MASTER DATA REPOSITORY & LOVs                                │
+│   • 76+ Real Manufacturers Ingested + Master UOM Standards + Compound Fractions          │
+│   • Official Taxonomy LOVs (Item Types, Mounting, Materials, Voltages)                   │
 └─────────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
                                               ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                   PHASE 4: AGENTIC WEB SOURCING & BRAND RESOLUTION                        │
-│   • RapidFuzz Matcher: "frigid air" ──> "FRIGIDAIRE®"                                     │
-│   • Async Scraper + In-Memory Cache: Retrieves Official Technical Datasheet HTML         │
+│                   OFFICIAL MANUFACTURER SOURCING & DOMAIN REGISTRY                       │
+│   • Domain Allowlist (HTTPS only, Redirect Validation, Max 5MB Limit, Exponential Backoff)│
+│   • HTML & PDF Parsing Engine for Official Datasheets (BeautifulSoup + PyPDF)            │
+│   • Content Hashing, Two-Tier Caching (Redis/Memory), Exact Snippet Evidence Tracking    │
 └─────────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
                                               ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                       PHASE 3: ZERO-SHOT AI EXTRACTION (LLM)                              │
-│   • NVIDIA Nemotron-3.5 / OpenAI SDK (Temperature = 0.0)                                 │
-│   • Grounded Extraction into Pydantic ExtractedAttributes Schema                          │
-│   • Built-in Heuristic Fallback for Offline/Zero-Failure Resilience                      │
+│                       ZERO-SHOT LLM & STRUCTURED EXTRACTION                              │
+│   • NVIDIA Nemotron / OpenAI SDK Client (temperature=0.0)                                │
+│   • LOV-Constrained System & User Prompts with Scraped Datasheet Evidence Grounding      │
+│   • Transparent Source Mode Labeling: LIVE_NIM vs OFFLINE_HEURISTIC vs CACHE (No Fakes!) │
 └─────────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
                                               ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                     PHASE 2: DETERMINISTIC SYMBOLIC GUARDRAILS                            │
-│   • UOM Spacing & Casing: "120v" ──> "120 V", "15a" ──> "15 A", "47dba" ──> "47 dBA"     │
-│   • Compound Fractions: "50.25 in" ──> "50-1/4 in", "0.5 in" ──> "1/2 in"                 │
-│   • Invoice Desc Rule: ALL CAPS, strictly <= 40 characters                               │
+│                     DETERMINISTIC SYMBOLIC GUARDRAILS & ABBREVIATION                     │
+│   • Placeholder Noise Sanitization                                                       │
+│   • UOM Spacing & Canonical Casing ("120v" -> "120 V", "15a" -> "15 A")                  │
+│   • Compound Fraction Conversion ("50.25 in" -> "50-1/4 in")                             │
+│   • Intelligent Abbreviation & Compression for INVOICE_DESC (<= 40 chars, ALL CAPS)     │
+│   • MOBILE_DESC Calibration (60-80 chars)                                                │
+│   • LOV & Numeric Validation                                                             │
 └─────────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
                                               ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                     PHASE 6: MULTI-CHANNEL DELIVERY & EXPORT                             │
-│   1. INVOICE_DESC (ERP / POS): DISHWASHER LEG SST 120 V 50-1/4 IN  [<= 40 Chars]          │
-│   2. MOBILE_DESC (B2B App):    FRIGIDAIRE®, Dishwasher, PDSH4816AF [60-80 Chars]         │
-│   3. PRODUCT_TITLE (Web/E-Com): FRIGIDAIRE® PDSH4816AF Dishwasher With CleanBoost™        │
-│   4. LONG_DESC (Full Specs):   Structured Technical Paragraph                            │
-│   5. STATIC 252-COLUMN CSV:    Full Unilog Enterprise Delivery Format                    │
+│                   MATHEMATICAL CONFIDENCE & PROVENANCE ENGINE                            │
+│   • Confidence = 0.40 * Provenance + 0.35 * LOV_Match + 0.25 * Rule_Compliance           │
+│   • Field-Level Provenance (Value, Source URL, Type, Snippet, Retrieved At, Confidence)   │
+└─────────────────────────────────────────────┬────────────────────────────────────────────┘
+                                              │
+                   ┌──────────────────────────┴──────────────────────────┐
+                   │                                                     │
+                   ▼ (Confidence >= 0.90)                                ▼ (Confidence < 0.90)
+┌──────────────────────────────────────────┐          ┌────────────────────────────────────────────┐
+│      STATIC 252-COLUMN UNILOG MAPPER     │          │         PERSISTENT HITL REVIEW QUEUE       │
+│  • 252 Exact Headers & Ordering Check    │          │  • Side-by-side Evidence Inspector         │
+│  • Required Fields & Type Compliance     │          │  • Inline Editing, Approve/Reject Actions  │
+│  • CSV Exporter & Encoding Validator     │          │  • Full Audit Event Trail                  │
+└──────────────────┬───────────────────────┘          └────────────────────┬───────────────────────┘
+                   │                                                       │
+                   │◄──────────────────────────────────────────────────────┘
+                   ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│                         POSTGRESQL PERSISTENCE & AUDIT LOGGING                           │
+│   • Products, EnrichmentRuns, ExtractedAttributes, Sources, BatchJobs, Reviews, Audits   │
 └─────────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
                                               ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                  PHASE 6: NEXT.JS ENTERPRISE DASHBOARD & HITL TRIAGE                     │
-│   • Single-Item Sandbox with Live Confidence Badges (Green >=90%, Yellow, Red)           │
-│   • Batch Ingestion, HITL Review Table (Approve/Flag), and Direct CSV Download           │
+│                         GROUND-TRUTH BENCHMARK ENGINE                                    │
+│   • 200-Row Dataset Evaluation: Exact Match, Field Accuracy, Schema Compliance,          │
+│     UOM/Fraction Compliance, Confidence Distribution, Reproducible Reports               │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Complete Phase-by-Phase Implementation
+## 3. Implemented Modules & Data Models
 
-### Phase 1: Monorepo Foundation & Architecture Scaffold
-- **FastAPI Backend**: Built with modular package layers (`app/api/`, `app/core/`, `app/data/`, `app/agents/`, `app/ai/`).
-- **Next.js 14/16 Frontend**: App router with TypeScript, Tailwind CSS, and Lucide icons.
-- **Git Configuration**: Monorepo `.gitignore` excluding Python caches, virtual environments, `.next` build caches, and environment files.
+### 1. Database & Persistence Layer (`backend/app/db/`)
+- `Product`: Raw catalog records and canonical status.
+- `EnrichmentRun`: Execution instance, mathematical confidence breakdown, multi-channel outputs, execution time ms.
+- `ExtractedAttribute`: Field-level attribute with provenance URL, evidence text, confidence, and LOV status.
+- `Source`: Raw scraped HTML/PDF context, domain, content hash, timestamp, HTTP status.
+- `SourceEvidence`: Extracted technical key-value snippets from manufacturer sources.
+- `BatchJob`: Ingestion jobs with item progress counts, high confidence count, and review count.
+- `ReviewQueue`: Items flagged for HITL review ($<0.90$ confidence).
+- `ReviewAction`: Audit trail of human decisions (`APPROVE`, `REJECT`, `EDIT`).
+- `BenchmarkRun` & `BenchmarkResult`: Ground-truth benchmark metrics and row-level diffs.
+- `SchemaValidationResult`: 252-column validation reports.
+- `AuditEvent`: System and user action audit log.
 
----
+### 2. Master Data Repository (`backend/app/data/master_repository.py`)
+- Ingests `Unihack_ Sample Dataset - Input.csv` (76+ suppliers), master brands, UOM standards, fraction rules, and allowed List of Values (LOV) for categories, item types, mounting types, materials, voltages, and package units.
 
-### Phase 2: Deterministic Guardrails & Master Data Loaders
-- **`MasterDataLoader` ([`backend/app/data/loader.py`](file:///d:/unihack-nscie/backend/app/data/loader.py))**:
-  - Ingests `Decimal_Fraction.xlsx` and `Unilog_Master_UOM_Standards.xlsx` into fast in-memory dictionaries.
-  - Built-in comprehensive fallback tables covering all standard engineering fractions (`0.03125` to `0.96875`) and canonical UOM standards (`in`, `ft`, `V`, `A`, `W`, `Hz`, `RPM`, `dBA`, `mm`, `cm`, `lb`, etc.) for resilient offline operation.
-- **Placeholder Sanitizer ([`backend/app/core/sanitizer.py`](file:///d:/unihack-nscie/backend/app/core/sanitizer.py))**:
-  - Aggressively strips Unilog placeholder noise: `"-- Unbranded --"`, `"-- No Unilog Brand --"`, `"-- No DIB Brand --"`, `"-- Unassigned --"`, and null-equivalents (`nan`, `none`, `null`).
-- **Deterministic Guardrails ([`backend/app/core/guardrails.py`](file:///d:/unihack-nscie/backend/app/core/guardrails.py))**:
-  - `enforce_uom_spacing(text)`: RegEx-based spacing and canonical casing (`24in` $\to$ `24 in`, `120v` $\to$ `120 V`, `15a` $\to$ `15 A`, `47dba` $\to$ `47 dBA`).
-  - `decimal_to_fraction(text, fraction_map)`: Converts decimal inches into compound fractions (`50.25 in` $\to$ `50-1/4 in`, `0.5 in` $\to$ `1/2 in`, `12.125 in` $\to$ `12-1/8 in`).
-  - `format_invoice_desc(text)`: Strictly enforces **40-character maximum cap** and **ALL-CAPS** formatting.
+### 3. Official Manufacturer Sourcing & Evidence Engine (`backend/app/agents/manufacturer_sourcing.py`)
+- Approved official domain allowlist: `frigidaire.com`, `milwaukeetool.com`, `dewalt.com`, `freudtools.com`, `mirka.com`, `whirlpool.com`, `satco.com`, `leviton.com`, `festoolusa.com`, `southwire.com`, `kichler.com`, `3m.com`, `kregtool.com`, `boschtools.com`.
+- Enforces HTTPS-only, redirect validation, response size limits (5MB), timeout, exponential backoff, and text extraction via `BeautifulSoup` and `PyPDF`.
 
----
+### 4. Zero-Shot Nemotron LLM & Heuristic Extraction (`backend/app/ai/extractor.py`)
+- OpenAI SDK configured for NVIDIA NIM (`https://integrate.api.nvidia.com/v1`, model `nvidia/nemotron-3.5-lightning-30b-a3b`).
+- Transparent source mode labeling: `LIVE_NIM` vs `OFFLINE_HEURISTIC` vs `MANUFACTURER_SOURCE` vs `CACHE`.
 
-### Phase 3: Zero-Shot AI Extraction Pipeline
-- **Pydantic Schemas ([`backend/app/ai/schemas.py`](file:///d:/unihack-nscie/backend/app/ai/schemas.py))**:
-  - `ExtractedAttributes`: `brand`, `item_type`, `mpn`, `voltage`, `dimensions`, `mounting`, `material`, `raw_specs`.
-  - `EnrichmentRequest` & `EnrichmentResponse`.
-- **Zero-Shot Extractor ([`backend/app/ai/extractor.py`](file:///d:/unihack-nscie/backend/app/ai/extractor.py))**:
-  - OpenAI Python SDK configured for NVIDIA NIM (`https://integrate.api.nvidia.com/v1`, model `nvidia/nemotron-3.5-lightning-30b-a3b`) with `temperature=0.0`.
-  - Structured prompt enforcing strict JSON output.
-  - Zero-crash deterministic heuristic fallback extractor when offline or using dummy API credentials.
-- **Pipeline Orchestration ([`backend/app/core/pipeline.py`](file:///d:/unihack-nscie/backend/app/core/pipeline.py))**:
-  - Seamlessly pipes raw feed through sanitizer $\to$ AI extraction $\to$ symbolic guardrails.
+### 5. Deterministic Guardrails & Intelligent Abbreviation (`backend/app/core/guardrails.py`)
+- Progressive abbreviation & compression engine (`STAINLESS STEEL` $\to$ `SST`, `BUILT-IN` $\to$ `BLTLN`, `DISHWASHER` $\to$ `DISHWSHR`, `PACKAGE` $\to$ `PK`) ensuring strictly $\le 40$ chars and ALL CAPS without blind truncation.
+- UOM spacing (`24in` $\to$ `24 in`, `120v` $\to$ `120 V`).
+- Compound fractions (`50.25 in` $\to$ `50-1/4 in`, `0.5 in` $\to$ `1/2 in`).
+- Mobile description calibration (60–80 chars).
 
----
+### 6. Mathematical Confidence & Provenance Engine (`backend/app/core/confidence.py`)
+- Computes:
+  $$\text{Confidence} = 0.40 \times \text{provenance\_score} + 0.35 \times \text{lov\_match\_score} + 0.25 \times \text{rule\_compliance\_score}$$
+- Generates field-level provenance records: `{ value, source_url, source_type, evidence, retrieved_at, confidence, is_lov_validated }`.
 
-### Phase 4: Agentic Web Sourcing & Canonical Brand Resolution
-- **Canonical Brand Resolver ([`backend/app/agents/resolver.py`](file:///d:/unihack-nscie/backend/app/agents/resolver.py))**:
-  - Fast fuzzy matching using `rapidfuzz.process.extractOne` with `utils.default_process` against Unilog Master Legal Brand standards (`FRIGIDAIRE®`, `MILWAUKEE®`, `FREUD®`, `MIRKA®`, `WHIRLPOOL®`, `3M™`, `DEWALT®`, etc.).
-  - Automatically cleans supplier noise like `(2435)`, `(MIRUS)`, `LLC`, `Co.` and resolves messy variations (`"frigid air"` $\to$ `"FRIGIDAIRE®"`).
-- **Agentic Web Sourcing & In-Memory Cache ([`backend/app/agents/scraper.py`](file:///d:/unihack-nscie/backend/app/agents/scraper.py))**:
-  - Thread-safe memory dictionary cache (`MFR_CONTEXT_CACHE`) keyed by `brand_mpn`.
-  - Non-blocking async HTTP spec retrieval using `httpx.AsyncClient` + `BeautifulSoup` parsing to ground the LLM extraction in verified datasheet text.
+### 7. 252-Column Unilog Schema Validator (`backend/app/core/schema_validator.py`)
+- Validates exact 252 count, headers, ordering, required fields, attribute triplets, and length limits.
 
----
+### 8. Asynchronous Batch Processing Worker (`backend/app/worker/batch_worker.py`)
+- Background async task manager processing bulk CSV/XLSX uploads with persistent progress tracking.
 
-### Phase 5: Offline Fine-Tuning & Verifiable Rewards Evaluation
-- **Fine-Tuning Dataset Generator ([`backend/tuning/generate_dataset.py`](file:///d:/unihack-nscie/backend/tuning/generate_dataset.py))**:
-  - Ingests Unilog benchmark catalog data and produces OpenAI ChatML formatted training data at [`backend/tuning/train.jsonl`](file:///d:/unihack-nscie/backend/tuning/train.jsonl) with `system`, `user`, and `assistant` JSON.
-- **Verifiable Reward Evaluator (RLVR) ([`backend/tuning/evaluate_rlvr.py`](file:///d:/unihack-nscie/backend/tuning/evaluate_rlvr.py))**:
-  - Computes exact rule-based verifiable compliance scores (0.0 to 1.0 / 0% to 100%):
-    - `invoice_length_reward` (+1.0 if `INVOICE_DESC` $\le 40$ chars)
-    - `invoice_case_reward` (+1.0 if strictly uppercase)
-    - `uom_spacing_reward` (+1.0 if no numbers glued to letters, e.g. `120 V` vs `120v`)
-    - `fraction_format_reward` (+1.0 if compound fractions are used)
-    - `no_placeholders_reward` (+1.0 if no `-- Unbranded --` exists)
+### 9. Persistent HITL Review API (`backend/app/api/reviews.py`)
+- Full triage suite for low-confidence items with approve, reject, and edit actions backed by PostgreSQL audit logging.
+
+### 10. Real 200-Row Benchmark Engine (`backend/app/benchmark/benchmark_engine.py`)
+- Evaluates real input records against ground truth, computing exact match rate, field accuracy, category accuracy, schema compliance, UOM compliance, fraction compliance, and error samples.
 
 ---
 
-### Phase 6: Multi-Channel Delivery Engine & Enterprise Dashboard
-- **Multi-Channel Delivery Builder ([`backend/app/core/delivery.py`](file:///d:/unihack-nscie/backend/app/core/delivery.py))**:
-  - Builds all required B2B/B2C channel descriptors.
-  - Generates full **252-column schema records** conforming to `Unihack_ Expected Output - Delivery Format.csv`.
-- **Batch Processing & Export API ([`backend/app/api/routes.py`](file:///d:/unihack-nscie/backend/app/api/routes.py))**:
-  - `POST /api/enrich-batch`: Asynchronous parallel batch enrichment with HITL review statistics.
-  - `GET /api/export-sample`: Direct download of 252-column delivery CSV.
-- **Enterprise Next.js Dashboard ([`frontend/src/app/page.tsx`](file:///d:/unihack-nscie/frontend/src/app/page.tsx))**:
-  - **Live System Status Bar**: Real-time backend ping, guardrail active state.
-  - **Single Record Sandbox**: 5 quick-load presets, real-time enrichment trigger, color-coded confidence badge (🟢 $\ge 90\%$, 🟡 $75\text{--}89\%$, 🔴 $< 75\%$), and multi-channel cards.
-  - **Batch & HITL Triage Table**: 5-record benchmark runner, filter triage (`All`, `Needs Review (<90%)`, `High Confidence`), interactive "Approve" actions, and direct 252-column CSV export button.
-  - **Hydration Safe**: Fully guarded with `suppressHydrationWarning` and `mounted` states.
-
----
-
-## 3. Multi-Channel Business Rules Matrix
+## 4. Multi-Channel Business Rules Matrix
 
 | Channel / Deliverable | Target Constraints | Example Output |
 | :--- | :--- | :--- |
@@ -153,152 +158,97 @@ Traditional pure-LLM pipelines suffer from **hallucinations**, **inconsistent un
 
 ---
 
-## 4. API Endpoints Reference
+## 5. API Endpoints Reference
 
-### 1. Health Check
-`GET http://localhost:8000/health`
-```json
-{
-  "status": "NS-CIE Backend Active",
-  "engine": "Neuro-Symbolic Catalog Intelligence Engine (NS-CIE)",
-  "version": "1.0.0"
-}
-```
-
-### 2. Single Record Enrichment
-`POST http://localhost:8000/api/enrich-single`
-```json
-// Request
-{
-  "mfg_part_num": "PDSH4816AF",
-  "part_desc": "PDSH4816AF Dishwasher SS 120v 50.25in -- Unbranded --",
-  "raw_manuf": "frigid air"
-}
-
-// Response
-{
-  "mfg_part_num": "PDSH4816AF",
-  "attributes": {
-    "brand": "FRIGIDAIRE®",
-    "item_type": "Dishwasher",
-    "mpn": "PDSH4816AF",
-    "voltage": "120 V",
-    "dimensions": "50-1/4 in",
-    "mounting": "Leg",
-    "material": "Stainless Steel",
-    "raw_specs": { "amperage": "15 A" }
-  },
-  "invoice_desc": "DISHWASHER LEG SST 120 V 50-1/4 IN",
-  "channel_descriptions": {
-    "invoice_desc": "DISHWASHER LEG SST 120 V 50-1/4 IN",
-    "mobile_desc": "FRIGIDAIRE®, Dishwasher, PDSH4816AF, Stainless Steel, 120 V",
-    "product_title": "FRIGIDAIRE® PDSH4816AF Dishwasher With CleanBoost™",
-    "long_desc": "FRIGIDAIRE® PDSH4816AF Dishwasher. Engineered for demanding commercial and industrial applications. Key Specifications: 120 V Rating, Dimensions 50-1/4 in, Leg Mounting, Constructed from Stainless Steel.",
-    "short_desc": "FRIGIDAIRE® PDSH4816AF Dishwasher, 120 V Rating, Dimensions 50-1/4 in"
-  },
-  "status": "llm_grounded",
-  "confidence_score": 0.96
-}
-```
-
-### 3. Batch Record Enrichment & Triage
-`POST http://localhost:8000/api/enrich-batch`
-```json
-// Request
-{
-  "items": [
-    {
-      "mfg_part_num": "PDSH4816AF",
-      "part_desc": "PDSH4816AF Dishwasher SS 120v 50.25in -- Unbranded --",
-      "raw_manuf": "frigid air"
-    },
-    {
-      "mfg_part_num": "49-94-0013",
-      "part_desc": "49-94-0013 Milw 5\"x.045\"x7/8\" Metal Cut Off Disc -- No DIB Brand --",
-      "raw_manuf": "Milwaukee Accessory (4031)"
-    }
-  ]
-}
-
-// Response
-{
-  "total_items": 2,
-  "high_confidence_count": 2,
-  "review_needed_count": 0,
-  "average_confidence": 0.95,
-  "items": [ ... ],
-  "export_ready": true
-}
-```
-
-### 4. 252-Column CSV Export
-`GET http://localhost:8000/api/export-sample`
-- Downloads `NS-CIE_Enriched_Delivery_252_Columns.csv`.
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/health` | Backend operational health check |
+| `GET` | `/api/system/metrics` | Real-time system metrics (DB, Redis, LLM, LOVs) |
+| `POST` | `/api/test-guardrails` | Interactive deterministic guardrail processor |
+| `POST` | `/api/enrich-single` | Single item zero-shot enrichment + provenance |
+| `POST` | `/api/enrich-batch` | Inline batch enrichment with quality stats |
+| `POST` | `/api/batches` | Create a new batch ingestion job |
+| `POST` | `/api/batches/{id}/upload` | Upload CSV/XLSX file and enqueue background processing |
+| `GET` | `/api/batches/{id}` | Get batch metadata and status |
+| `GET` | `/api/batches/{id}/progress` | Get live progress percentage and review counts |
+| `GET` | `/api/batches/{id}/results` | Get processed records array |
+| `GET` | `/api/batches/{id}/download` | Download 252-column CSV deliverable |
+| `GET` | `/api/reviews` | List persistent HITL review queue items |
+| `GET` | `/api/reviews/{id}` | Get review item details with evidence |
+| `POST` | `/api/reviews/{id}/approve` | Approve review item with audit logging |
+| `POST` | `/api/reviews/{id}/reject` | Reject review item with audit logging |
+| `POST` | `/api/reviews/{id}/edit` | Modify value with human audit trail |
+| `POST` | `/api/benchmark/run` | Execute real ground-truth benchmark suite |
+| `GET` | `/api/benchmark/{id}` | Retrieve historical benchmark report |
+| `GET` | `/api/schema/validate/{id}` | Validate batch results against 252-column schema |
+| `GET` | `/api/export-sample` | Download sample 252-column delivery CSV |
 
 ---
 
-## 5. Verification & Test Suite Summary
+## 6. Automated Test Suite (33/33 Tests Passing)
 
-### Automated Backend Tests (22 Passed)
 ```powershell
 cd D:\unihack-nscie\backend
 & ".\.venv\Scripts\python.exe" -m pytest tests/ -v
 ```
+
 ```text
-tests/test_agents.py::test_resolve_canonical_brand_fuzzy_matching PASSED [  4%]
-tests/test_agents.py::test_fetch_manufacturer_context_and_caching[asyncio] PASSED [  9%]
-tests/test_delivery.py::test_delivery_headers_count PASSED               [ 13%]
-tests/test_delivery.py::test_build_channel_descriptions PASSED           [ 18%]
-tests/test_delivery.py::test_generate_252_column_record PASSED           [ 22%]
-tests/test_delivery.py::test_api_enrich_batch_endpoint PASSED            [ 27%]
-tests/test_delivery.py::test_api_export_sample_endpoint PASSED           [ 31%]
-tests/test_guardrails.py::test_clean_placeholders PASSED                 [ 36%]
-tests/test_guardrails.py::test_enforce_uom_spacing PASSED                [ 40%]
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.1.1
+rootdir: D:\unihack-nscie\backend
+collected 33 items
+
+tests/test_agents.py::test_resolve_canonical_brand_fuzzy_matching PASSED [  3%]
+tests/test_agents.py::test_fetch_manufacturer_context_and_caching[asyncio] PASSED [  6%]
+tests/test_confidence.py::test_confidence_calculation_perfect_compliance PASSED [  9%]
+tests/test_confidence.py::test_confidence_calculation_with_violations PASSED [ 12%]
+tests/test_database.py::test_database_initialization_and_product_crud PASSED [ 15%]
+tests/test_database.py::test_audit_event_logging PASSED                  [ 18%]
+tests/test_delivery.py::test_delivery_headers_count PASSED               [ 21%]
+tests/test_delivery.py::test_build_channel_descriptions PASSED           [ 24%]
+tests/test_delivery.py::test_generate_252_column_record PASSED           [ 27%]
+tests/test_delivery.py::test_api_enrich_batch_endpoint PASSED            [ 30%]
+tests/test_delivery.py::test_api_export_sample_endpoint PASSED           [ 33%]
+tests/test_e2e_pipeline.py::test_full_e2e_batch_benchmark_and_export PASSED [ 36%]
+tests/test_guardrails.py::test_clean_placeholders PASSED                 [ 39%]
+tests/test_guardrails.py::test_enforce_uom_spacing PASSED                [ 42%]
 tests/test_guardrails.py::test_decimal_to_fraction PASSED                [ 45%]
-tests/test_guardrails.py::test_complex_unilog_transformations PASSED     [ 50%]
-tests/test_guardrails.py::test_format_invoice_desc PASSED                [ 54%]
-tests/test_guardrails.py::test_master_data_loader_fallback PASSED        [ 59%]
-tests/test_guardrails.py::test_api_health_endpoint PASSED                [ 63%]
-tests/test_guardrails.py::test_api_test_guardrails_endpoint PASSED       [ 68%]
-tests/test_pipeline.py::test_extracted_attributes_schema PASSED          [ 72%]
-tests/test_pipeline.py::test_enrichment_pipeline_with_guardrails_and_agents[asyncio] PASSED [ 77%]
+tests/test_guardrails.py::test_complex_unilog_transformations PASSED     [ 48%]
+tests/test_guardrails.py::test_format_invoice_desc PASSED                [ 51%]
+tests/test_guardrails.py::test_master_data_loader_fallback PASSED        [ 54%]
+tests/test_guardrails.py::test_api_health_endpoint PASSED                [ 57%]
+tests/test_guardrails.py::test_api_test_guardrails_endpoint PASSED       [ 60%]
+tests/test_hitl_workflow.py::test_hitl_review_workflow_api PASSED        [ 63%]
+tests/test_manufacturer_sourcing.py::test_domain_allowlist_validation PASSED [ 66%]
+tests/test_manufacturer_sourcing.py::test_evidence_snippets_extraction PASSED [ 69%]
+tests/test_manufacturer_sourcing.py::test_fetch_official_manufacturer_offline_safe PASSED [ 72%]
+tests/test_pipeline.py::test_extracted_attributes_schema PASSED          [ 75%]
+tests/test_pipeline.py::test_enrichment_pipeline_with_guardrails_and_agents[asyncio] PASSED [ 78%]
 tests/test_pipeline.py::test_api_enrich_single_endpoint PASSED           [ 81%]
-tests/test_tuning.py::test_generate_chatml_jsonl PASSED                  [ 86%]
-tests/test_tuning.py::test_calculate_reward_score_compliant PASSED       [ 90%]
-tests/test_tuning.py::test_calculate_reward_score_non_compliant PASSED   [ 95%]
+tests/test_schema_validator.py::test_schema_validator_valid_dataframe PASSED [ 84%]
+tests/test_schema_validator.py::test_schema_validator_invalid_column_count PASSED [ 87%]
+tests/test_tuning.py::test_generate_chatml_jsonl PASSED                  [ 90%]
+tests/test_tuning.py::test_calculate_reward_score_compliant PASSED       [ 93%]
+tests/test_tuning.py::test_calculate_reward_score_non_compliant PASSED   [ 96%]
 tests/test_tuning.py::test_evaluate_batch PASSED                         [100%]
 
-============================= 22 passed in 4.06s ==============================
-```
-
-### Production Frontend Build
-```powershell
-cd D:\unihack-nscie\frontend
-npm run build
-```
-```text
-▲ Next.js 16.3.1 (Turbopack)
-✓ Compiled successfully in 1024ms
-✓ TypeScript check passed in 4.1s
-✓ Generating static pages (4/4) in 1152ms
+====================== 33 passed in 18.68s =======================
 ```
 
 ---
 
-## 6. Local Quickstart Guide
+## 7. One-Command Docker Deployment
 
-### Terminal 1: Launch FastAPI Backend
-```powershell
-cd D:\unihack-nscie\backend
-.\.venv\Scripts\Activate.ps1
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-- API Docs: `http://localhost:8000/docs`
-- Health: `http://localhost:8000/health`
+To launch the complete system in a clean environment:
 
-### Terminal 2: Launch Next.js Dashboard
-```powershell
-cd D:\unihack-nscie\frontend
-npm run dev
+```bash
+docker compose up --build
 ```
-- Dashboard URL: `http://localhost:3000`
+
+### Services Launched:
+- `nginx` on `http://localhost:80`
+- `frontend` on `http://localhost:3000`
+- `backend` on `http://localhost:8000`
+- `postgres` on port `5432`
+- `redis` on port `6379`
+- `worker` background queue processor

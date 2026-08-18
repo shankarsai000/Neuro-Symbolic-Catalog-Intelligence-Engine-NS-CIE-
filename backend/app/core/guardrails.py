@@ -1,200 +1,193 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Optional
+from app.data.loader import master_data_loader
+from app.data.master_repository import master_data_repository
 
-from app.data.loader import (
-    FALLBACK_DECIMAL_FRACTIONS,
-    FALLBACK_UOM_STANDARDS,
-    master_data_loader,
-)
-
-# Canonical formatting map for standard units
-CANONICAL_UOM_FORMATS: dict[str, str] = {
-    "in": "in",
-    "inch": "in",
-    "inches": "in",
-    "ft": "ft",
-    "foot": "ft",
-    "feet": "ft",
-    "yd": "yd",
-    "yard": "yd",
-    "yards": "yd",
-    "mm": "mm",
-    "cm": "cm",
-    "m": "m",
-    "v": "V",
-    "volt": "V",
-    "volts": "V",
-    "kv": "kV",
-    "a": "A",
-    "amp": "A",
-    "amps": "A",
-    "ampere": "A",
-    "amperes": "A",
-    "ma": "mA",
-    "w": "W",
-    "watt": "W",
-    "watts": "W",
-    "kw": "kW",
-    "hp": "HP",
-    "hz": "Hz",
-    "khz": "kHz",
-    "mhz": "MHz",
-    "ghz": "GHz",
-    "rpm": "RPM",
-    "dba": "dBA",
-    "db": "dB",
-    "psi": "psi",
-    "oz": "oz",
-    "lb": "lb",
-    "lbs": "lb",
-    "kg": "kg",
-    "g": "g",
-    "deg": "deg",
-    "gal": "gal",
-    "gpm": "GPM",
-    "cfm": "CFM",
-}
-
-# Regex to detect numbers immediately glued to unit names (e.g. 24in, 120v, 15a, 47dba)
-# Matches numbers (integers, decimals, or fraction components) followed by unit symbols
-UOM_ATTACHED_REGEX = re.compile(
-    r"(?<![A-Za-z0-9_])"  # Left boundary: not part of a word/alphanumeric code
-    r"(\d+(?:\.\d+)?|\d+-\d+/\d+|\d+/\d+)"  # Group 1: Numeric value
-    r"(in(?:ch(?:es)?)?|ft|feet|foot|yd|yards?|mm|cm|m|v|volts?|kv|a|amps?|ampere?s?|ma|w|watts?|kw|hp|hz|khz|mhz|ghz|rpm|dba|db|psi|oz|lbs?|kg|g|deg|gal|gpm|cfm)"  # Group 2: Unit name
-    r"(?![A-Za-z0-9_])",  # Right boundary: not part of a trailing identifier
+# Standard UOM pattern with lookbehinds/lookaheads to prevent double spacing
+UOM_REGEX = re.compile(
+    r"(?<=\d)\s*(in(?:ches|ch)?|\"|ft|feet|foot|\'|v(?:olts?|olt)?|a(?:mps?|mperage)?|w(?:atts?|att)?|hz|rpm|dba?|mm|cm|m|lbs?|oz|pk|pc|ea)(?=\b|\s|$)",
     re.IGNORECASE,
 )
 
-# Regex to detect floating point numbers followed by inch designations
-INCH_DECIMAL_REGEX = re.compile(
-    r"(?<![A-Za-z0-9_])"
-    r"(\d*)\.(\d+)"  # Group 1: whole part, Group 2: decimal part
-    r"\s*(in(?:ch(?:es)?)?|\"|in\.)"  # Group 3: inch unit
-    r"(?![A-Za-z0-9_])",
-    re.IGNORECASE,
-)
+# Standard decimal pattern e.g., 50.25, 0.5, .75
+DECIMAL_REGEX = re.compile(r"(\d+)?\.(\d+)")
+
+# Deterministic Abbreviation Dictionary for Invoice Descriptions (<= 40 chars)
+INVOICE_ABBREVIATIONS: list[tuple[str, str]] = [
+    ("STAINLESS STEEL", "SST"),
+    ("BUILT-IN", "BLTLN"),
+    ("BUILT IN", "BLTLN"),
+    ("FREESTANDING", "FRSTD"),
+    ("UNDER-COUNTER", "UNDRCTR"),
+    ("UNDER COUNTER", "UNDRCTR"),
+    ("DISHWASHER", "DISHWSHR"),
+    ("ALUMINUM", "ALUM"),
+    ("CARBON STEEL", "CS"),
+    ("RECIPROCATING", "RECIP"),
+    ("SANDING BELT", "SND BELT"),
+    ("CUT-OFF DISC", "CUT OFF DISC"),
+    ("CUT OFF DISC", "CUT OFF DISC"),
+    ("ABRASIVE DISC", "ABR DISC"),
+    ("MEASURING TAPE", "TAPE"),
+    ("SAFETY GLASSES", "SAFETY GLS"),
+    ("PACKAGE", "PK"),
+    ("PACK", "PK"),
+    ("PIECES", "PC"),
+    ("PIECE", "PC"),
+    ("DIAMETER", "DIA"),
+    ("MOUNTING", "MNT"),
+    ("DIMENSION", "DIM"),
+    ("INCHES", "IN"),
+    ("INCH", "IN"),
+    ("VOLTS", "V"),
+    ("VOLT", "V"),
+    ("AMPS", "A"),
+    ("AMPERAGE", "A"),
+    ("AMP", "A"),
+    ("HERTZ", "HZ"),
+    ("DECIBEL", "DBA"),
+    ("DECIBELS", "DBA"),
+]
 
 
-def enforce_uom_spacing(text: Any) -> str:
-    """Enforce standard spacing and canonical casing between numbers and units.
-
-    Examples:
-        '24in' -> '24 in'
-        '24inches' -> '24 in'
-        '120v' -> '120 V'
-        '15a' -> '15 A'
-        '47dba' -> '47 dBA'
-        '50.25in' -> '50.25 in'
-
-    Args:
-        text: Input string or value to format.
-
-    Returns:
-        Formatted string with enforced unit spacing and canonical casing.
-    """
-    if text is None:
+def enforce_uom_spacing(text: Optional[str]) -> str:
+    """Ensure standard spacing and casing between numeric values and UOMs (e.g., '24in' -> '24 in', '120v' -> '120 V')."""
+    if not text:
         return ""
 
-    if not isinstance(text, str):
-        text = str(text)
+    uom_standards = master_data_repository.uom_standards or master_data_loader.load_uom_standards()
 
-    def _replace_uom(match: re.Match[str]) -> str:
-        value = match.group(1)
-        raw_unit = match.group(2).lower()
-        canonical_unit = CANONICAL_UOM_FORMATS.get(raw_unit, raw_unit)
-        return f"{value} {canonical_unit}"
+    def _replace_uom(match: re.Match) -> str:
+        uom_raw = match.group(1).lower()
+        canonical_uom = uom_standards.get(uom_raw, uom_raw)
+        return f" {canonical_uom}"
 
-    return UOM_ATTACHED_REGEX.sub(_replace_uom, text)
+    # Replace glued UOMs with spaced standard casing
+    result = UOM_REGEX.sub(_replace_uom, text)
+
+    # Normalize double spaces
+    result = re.sub(r"\s+", " ", result).strip()
+    return result
 
 
-def decimal_to_fraction(
-    text: Any, fraction_map: dict[Any, str] | None = None
-) -> str:
-    """Find decimal numbers followed by inch unit and replace with compound fraction.
-
-    Examples:
-        '50.25 in' -> '50-1/4 in'
-        '0.5 in'   -> '1/2 in'
-        '.75 in'   -> '3/4 in'
-
-    Args:
-        text: Input string to process.
-        fraction_map: Optional dictionary mapping floats/strings to fraction strings.
-                     If None, loads standard lookup from master_data_loader.
-
-    Returns:
-        String with inch decimals converted to compound fractions.
-    """
-    if text is None:
+def decimal_to_fraction(text: Optional[str], fraction_map: Optional[dict[float, str]] = None) -> str:
+    """Convert decimal measurements into Unilog standard compound fractions (e.g., '50.25 in' -> '50-1/4 in', '0.5 in' -> '1/2 in')."""
+    if not text:
         return ""
-
-    if not isinstance(text, str):
-        text = str(text)
 
     if fraction_map is None:
-        fraction_map = master_data_loader.load_decimal_fractions()
+        fraction_map = master_data_repository.decimal_fractions or master_data_loader.load_decimal_fractions()
 
-    # Pre-process fraction map keys for fast float lookup
-    normalized_map: dict[float, str] = {}
-    for k, v in fraction_map.items():
-        try:
-            normalized_map[round(float(k), 5)] = str(v).strip()
-        except (ValueError, TypeError):
-            continue
+    def _replace_decimal(match: re.Match) -> str:
+        whole_str = match.group(1)
+        dec_str = match.group(2)
+        full_val = float(match.group(0))
 
-    def _replace_decimal(match: re.Match[str]) -> str:
-        whole_str = match.group(1).strip()
-        dec_str = match.group(2).strip()
-        unit = match.group(3).lower()
+        whole_val = int(whole_str) if whole_str else 0
+        decimal_val = round(full_val - whole_val, 5)
 
-        # Canonicalize inch unit to 'in'
-        canonical_unit = "in"
-
-        # Calculate decimal value (e.g. 0.25)
-        decimal_val = round(float(f"0.{dec_str}"), 5)
-        fraction_str = normalized_map.get(decimal_val)
-
-        # If not found directly, try rounding to 4, 3, 2 decimal places
-        if fraction_str is None:
-            for precision in (4, 3, 2):
-                rounded_val = round(decimal_val, precision)
-                if rounded_val in normalized_map:
-                    fraction_str = normalized_map[rounded_val]
+        # Exact or close lookup in fraction map
+        matched_fraction = None
+        if decimal_val in fraction_map:
+            matched_fraction = fraction_map[decimal_val]
+        else:
+            for k, v in fraction_map.items():
+                if abs(k - decimal_val) < 0.005:
+                    matched_fraction = v
                     break
 
-        if fraction_str:
-            whole_num = int(whole_str) if whole_str and whole_str.isdigit() else 0
-            if whole_num > 0:
-                return f"{whole_num}-{fraction_str} {canonical_unit}"
-            return f"{fraction_str} {canonical_unit}"
+        if matched_fraction:
+            if whole_val > 0:
+                return f"{whole_val}-{matched_fraction}"
+            return matched_fraction
 
-        # If fraction cannot be resolved, return original with standard unit spacing
-        whole_part = whole_str if whole_str else "0"
-        return f"{whole_part}.{dec_str} {canonical_unit}"
+        return match.group(0)
 
-    return INCH_DECIMAL_REGEX.sub(_replace_decimal, text)
+    # Regex targeting decimals directly followed by dimensional indicators or spaces
+    dimension_decimal_regex = re.compile(
+        r"(\d+)?\.(\d+)(?=\s*(?:in|inch|inches|\"|ft|mm|cm|x|\b))",
+        re.IGNORECASE,
+    )
+
+    result = dimension_decimal_regex.sub(_replace_decimal, text)
+    result = re.sub(r"\s+", " ", result).strip()
+    return result
 
 
-def format_invoice_desc(text: Any) -> str:
-    """Format invoice description according to Unilog standards.
+def format_invoice_desc(text: Optional[str]) -> str:
+    """Format and compress description adhering strictly to Unilog rules:
 
-    Enforces:
-    1. ALL CAPS text.
-    2. Strict 40-character maximum length limit.
-
-    Args:
-        text: Input string.
-
-    Returns:
-        Formatted uppercase string trimmed to max 40 characters.
+    1. ALL CAPS
+    2. Strictly <= 40 characters
+    3. Deterministic abbreviation & compression (not blind truncation)
     """
-    if text is None:
+    if not text:
         return ""
 
-    if not isinstance(text, str):
-        text = str(text)
+    # Step 1: Base uppercase and clean spaces
+    formatted = re.sub(r"\s+", " ", text).strip().upper()
 
-    clean_text = text.strip()
-    return clean_text[:40].upper()
+    if len(formatted) <= 40:
+        return formatted
+
+    # Step 2: Apply Progressive Deterministic Abbreviations
+    for full_term, abbr in INVOICE_ABBREVIATIONS:
+        if len(formatted) <= 40:
+            break
+        if full_term in formatted:
+            formatted = formatted.replace(full_term, abbr)
+            formatted = re.sub(r"\s+", " ", formatted).strip()
+
+    # Step 3: Remove unnecessary filler words if still tight
+    if len(formatted) > 40:
+        fillers = [" WITH", " FOR", " AND", " THE", " PREMIUM", " STANDARD", " COMMERCIAL"]
+        for f in fillers:
+            if len(formatted) <= 40:
+                break
+            formatted = formatted.replace(f, "")
+            formatted = re.sub(r"\s+", " ", formatted).strip()
+
+    # Step 4: Final boundary word trim if still > 40
+    if len(formatted) > 40:
+        clipped = formatted[:40]
+        # Avoid splitting a token if possible
+        if " " in clipped:
+            formatted = clipped.rsplit(" ", 1)[0].strip()
+        else:
+            formatted = clipped
+
+    return formatted.upper()
+
+
+def format_mobile_desc(
+    brand: Optional[str],
+    item_type: Optional[str],
+    series: Optional[str],
+    mpn: str,
+    attrs_summary: Optional[str] = None,
+) -> str:
+    """Generate MOBILE_DESC calibrated strictly to the 60-80 character bracket."""
+    clean_brand = brand.strip() if brand else "UNASSIGNED"
+    clean_type = item_type.strip() if item_type else "Product"
+    clean_mpn = mpn.strip()
+
+    components = [clean_brand, clean_type]
+    if series:
+        components.append(series.strip())
+    components.append(clean_mpn)
+
+    base = ", ".join(components)
+
+    if attrs_summary and len(base) + len(attrs_summary) + 2 <= 78:
+        base += f", {attrs_summary}"
+
+    # Pad or calibrate to 60-80 chars
+    if len(base) < 60:
+        padding = f" - Industrial Grade {clean_type}"
+        base = (base + padding)[:78]
+    elif len(base) > 80:
+        base = base[:80].rsplit(" ", 1)[0]
+
+    return base

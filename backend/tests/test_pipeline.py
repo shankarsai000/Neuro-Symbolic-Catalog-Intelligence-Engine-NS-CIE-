@@ -61,5 +61,5 @@ def test_api_enrich_single_endpoint():
     assert data["attributes"]["dimensions"] == "50-1/4 in"
     assert "invoice_desc" in data
     assert len(data["invoice_desc"]) <= 40
-    assert data["status"] in ("llm_extracted", "heuristic_fallback", "fallback_extracted")
+    assert data["source_mode"] in ("LIVE_NIM", "OFFLINE_HEURISTIC", "MANUFACTURER_SOURCE", "CACHE")
     assert data["confidence_score"] > 0.0
