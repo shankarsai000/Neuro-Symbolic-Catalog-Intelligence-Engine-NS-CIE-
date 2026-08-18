@@ -1,24 +1,19 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-FROM node:20-alpine AS runner
-
-WORKDIR /app
+RUN apk add --no-cache curl wget
 
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=3000 \
+    HOST=0.0.0.0
 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
+COPY package*.json ./
+COPY .next ./.next
+COPY public ./public
+COPY node_modules ./node_modules
+
+USER node
 
 EXPOSE 3000
 

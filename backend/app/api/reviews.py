@@ -139,7 +139,7 @@ async def approve_review(
         raise HTTPException(status_code=404, detail="Review item not found")
 
     r.status = "APPROVED"
-    r.resolved_at = datetime.datetime.utcnow()
+    r.resolved_at = datetime.datetime.now(datetime.timezone.utc)
 
     # Log Review Action
     action = ReviewAction(
@@ -183,7 +183,7 @@ async def reject_review(
         raise HTTPException(status_code=404, detail="Review item not found")
 
     r.status = "REJECTED"
-    r.resolved_at = datetime.datetime.utcnow()
+    r.resolved_at = datetime.datetime.now(datetime.timezone.utc)
 
     action = ReviewAction(
         review_id=r.id,
@@ -227,7 +227,7 @@ async def edit_review(
     prev_val = r.current_value
     r.current_value = payload.new_value
     r.status = "EDITED"
-    r.resolved_at = datetime.datetime.utcnow()
+    r.resolved_at = datetime.datetime.now(datetime.timezone.utc)
 
     action = ReviewAction(
         review_id=r.id,

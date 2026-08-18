@@ -4,7 +4,7 @@ import hashlib
 import io
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -152,7 +152,7 @@ async def fetch_official_manufacturer_specs(
     domain = APPROVED_MANUFACTURER_DOMAINS.get(canonical_brand, "")
     target_url = custom_url or (f"https://{domain}/products/{mpn.lower()}" if domain else "")
 
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     # If domain is not in approved registry or URL fails validation
     if not domain or not target_url or not is_url_allowed(target_url, canonical_brand):

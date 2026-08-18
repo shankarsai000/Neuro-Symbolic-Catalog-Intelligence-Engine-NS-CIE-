@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -9,8 +7,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-nscie_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nscie_password}
       POSTGRES_DB: ${POSTGRES_DB:-nscie_db}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,13 +14,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   redis:
     image: redis:7-alpine
     container_name: nscie_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -32,6 +27,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 3s
 
   backend:
     build:
@@ -45,18 +41,38 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-dummy_key_if_missing}
       LLM_BASE_URL: ${LLM_BASE_URL:-https://integrate.api.nvidia.com/v1}
       LLM_MODEL_NAME: ${LLM_MODEL_NAME:-nvidia/nemotron-3.5-lightning-30b-a3b}
-    ports:
-      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 10s
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["python", "-m", "app.worker.batch_worker"]
+    container_name: nscie_worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nscie_user}:${POSTGRES_PASSWORD:-nscie_password}@postgres:5432/${POSTGRES_DB:-nscie_db}
+      REDIS_URL: redis://redis:6379/0
+      LLM_API_KEY: ${LLM_API_KEY:-dummy_key_if_missing}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://integrate.api.nvidia.com/v1}
+      LLM_MODEL_NAME: ${LLM_MODEL_NAME:-nvidia/nemotron-3.5-lightning-30b-a3b}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
 
   frontend:
     build:
@@ -64,12 +80,18 @@ services:
       dockerfile: Dockerfile
     container_name: nscie_frontend
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
+      PORT: 3000
       NEXT_PUBLIC_API_URL: http://localhost:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   nginx:
     build:
@@ -78,10 +100,18 @@ services:
     container_name: nscie_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "${NSCIE_PORT:-8888}:80"
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:

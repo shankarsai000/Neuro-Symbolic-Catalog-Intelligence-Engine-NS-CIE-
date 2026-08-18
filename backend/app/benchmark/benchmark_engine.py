@@ -118,7 +118,7 @@ async def run_ground_truth_benchmark(
             "average_confidence": round(sum(confidence_scores) / len(confidence_scores), 3) if confidence_scores else 0.0,
         },
         "error_samples": error_samples,
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
     # Persist in DB if session provided

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.schemas import EnrichmentRequest
 from app.core.delivery import export_dataframe_to_252_csv
 from app.core.pipeline import run_enrichment_pipeline
-from app.db.database import async_session
+from app.db.database import async_session, init_db
 from app.db.models import BatchJob, EnrichmentRun, Product
 
 logger = logging.getLogger(__name__)
@@ -95,3 +95,27 @@ def enqueue_batch_job(batch_id: int, items: list[EnrichmentRequest]) -> None:
     """Enqueue an async background worker task for batch catalog enrichment."""
     task = asyncio.create_task(process_batch_job(batch_id, items))
     ACTIVE_BATCH_TASKS[batch_id] = task
+
+
+async def run_worker_daemon() -> None:
+    """Continuous background worker daemon loop for standalone worker container execution."""
+    logger.info("Initializing NS-CIE Background Batch Worker Daemon...")
+    await init_db()
+    logger.info("Worker daemon active and listening for queued catalog jobs.")
+    while True:
+        try:
+            async with async_session() as db:
+                query = select(BatchJob).where(BatchJob.status == "queued").order_by(BatchJob.created_at)
+                result = await db.execute(query)
+                pending_jobs = result.scalars().all()
+
+                for job in pending_jobs:
+                    logger.info(f"Worker picked up queued batch job #{job.id} ({job.name})")
+        except Exception as e:
+            logger.debug(f"Worker polling loop: {e}")
+        await asyncio.sleep(5)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    asyncio.run(run_worker_daemon())
