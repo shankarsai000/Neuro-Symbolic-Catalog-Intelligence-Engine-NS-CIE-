@@ -29,7 +29,7 @@ from app.core.sanitizer import clean_placeholders
 from app.core.schema_validator import validate_252_column_dataframe
 from app.data.master_repository import master_data_repository
 from app.db.database import get_db
-from app.db.models import BatchJob, BenchmarkRun, Product, ReviewQueue
+from app.db.models import BatchJob, BenchmarkResult, BenchmarkRun, Product, ReviewQueue
 from app.worker.batch_worker import BATCH_RESULTS_CACHE, enqueue_batch_job, job_queue_manager
 
 router = APIRouter()
@@ -80,8 +80,9 @@ class CreateBatchRequest(BaseModel):
 
 
 class BenchmarkRunRequest(BaseModel):
-    run_name: str = Field(default="Unilog 200-Row Evaluation Suite")
-    sample_limit: int = Field(default=50, ge=5, le=200)
+    run_name: str = Field(default="Unilog Ground-Truth Evaluation Suite")
+    sample_limit: Optional[int] = Field(default=50, ge=1, le=1000)
+    ground_truth_only: bool = Field(default=False, description="Filter specifically to ground-truth records")
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -463,9 +464,45 @@ async def execute_benchmark(
     report = await run_ground_truth_benchmark(
         run_name=payload.run_name,
         sample_limit=payload.sample_limit,
+        ground_truth_only=payload.ground_truth_only,
         db=db,
     )
     return report
+
+
+@router.get("/api/benchmark/runs")
+async def list_benchmark_runs(
+    limit: int = Query(default=20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """List all historical benchmark evaluation runs."""
+    query = select(BenchmarkRun).order_by(desc(BenchmarkRun.created_at)).limit(limit)
+    result = await db.execute(query)
+    runs = result.scalars().all()
+    return {
+        "total_runs": len(runs),
+        "runs": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "dataset_path": r.dataset_path,
+                "total_rows": r.total_rows,
+                "exact_match_rate": r.exact_match_rate,
+                "field_accuracy": r.field_accuracy,
+                "category_accuracy": r.category_accuracy,
+                "brand_accuracy": r.brand_accuracy,
+                "mpn_accuracy": r.mpn_accuracy,
+                "attribute_accuracy": r.attribute_accuracy,
+                "schema_compliance": r.schema_compliance,
+                "uom_compliance": r.uom_compliance,
+                "fraction_compliance": r.fraction_compliance,
+                "invoice_compliance": r.invoice_compliance,
+                "predictions_hash": r.predictions_hash,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in runs
+        ],
+    }
 
 
 @router.get("/api/benchmark/{run_id}")
@@ -473,7 +510,7 @@ async def get_benchmark_report(
     run_id: int,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Retrieve historical benchmark run results."""
+    """Retrieve historical benchmark run report."""
     query = select(BenchmarkRun).where(BenchmarkRun.id == run_id)
     result = await db.execute(query)
     bench = result.scalar_one_or_none()
@@ -482,6 +519,78 @@ async def get_benchmark_report(
         raise HTTPException(status_code=404, detail="Benchmark run not found")
 
     return bench.report_json
+
+
+@router.get("/api/benchmark/{run_id}/errors")
+async def get_benchmark_errors(
+    run_id: int,
+    limit: int = Query(default=100, ge=1, le=1000),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Retrieve specific mismatch and rule violation errors recorded during a benchmark run."""
+    query = (
+        select(BenchmarkResult)
+        .where(BenchmarkResult.benchmark_run_id == run_id)
+        .order_by(BenchmarkResult.row_index)
+    )
+    result = await db.execute(query)
+    records = result.scalars().all()
+
+    all_errors: list[dict[str, Any]] = []
+    for rec in records:
+        if rec.errors_json:
+            for err in rec.errors_json:
+                all_errors.append(err)
+
+    return {
+        "run_id": run_id,
+        "total_errors": len(all_errors),
+        "errors": all_errors[:limit],
+    }
+
+
+@router.get("/api/benchmark/{run_id}/results")
+async def get_benchmark_results(
+    run_id: int,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Retrieve per-record evaluation results for a benchmark run."""
+    query = (
+        select(BenchmarkResult)
+        .where(BenchmarkResult.benchmark_run_id == run_id)
+        .order_by(BenchmarkResult.row_index)
+        .offset(offset)
+        .limit(limit)
+    )
+    result = await db.execute(query)
+    records = result.scalars().all()
+
+    return {
+        "run_id": run_id,
+        "total": len(records),
+        "offset": offset,
+        "limit": limit,
+        "results": [
+            {
+                "row_index": r.row_index,
+                "mpn": r.mpn,
+                "is_exact_match": r.is_exact_match,
+                "predicted_brand": r.predicted_brand,
+                "predicted_category": r.predicted_category,
+                "predicted_invoice": r.predicted_invoice,
+                "expected_brand": r.expected_brand,
+                "expected_category": r.expected_category,
+                "expected_invoice": r.expected_invoice,
+                "confidence": r.confidence,
+                "source_mode": r.source_mode,
+                "field_scores": r.field_scores_json,
+                "errors": r.errors_json,
+            }
+            for r in records
+        ],
+    }
 
 
 @router.get("/api/schema/validate/{batch_id}")

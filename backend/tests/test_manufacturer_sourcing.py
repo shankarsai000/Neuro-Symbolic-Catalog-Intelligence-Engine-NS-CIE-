@@ -193,22 +193,25 @@ async def test_fetch_official_manufacturer_specs_offline_safe():
     assert "<main class=\"product-datasheet\">" not in result.extracted_text
 
 
+import uuid
+
 @pytest.mark.asyncio
 async def test_fetch_official_manufacturer_specs_db_persistence():
     """Verify Source and SourceEvidence records are persisted to PostgreSQL."""
     await init_db()
     source_cache.clear()
+    unique_mpn = f"HOM250-{uuid.uuid4().hex[:6].upper()}"
 
     async with async_session() as db:
         result = await fetch_official_manufacturer_specs(
             canonical_brand="SCHNEIDER ELECTRIC",
-            mpn="HOM250-PERSIST-TEST",
+            mpn=unique_mpn,
             db=db,
         )
         await db.commit()
 
     async with async_session() as db:
-        query = select(Source).where(Source.mpn == "HOM250-PERSIST-TEST")
+        query = select(Source).where(Source.mpn == unique_mpn)
         res = await db.execute(query)
         # Sourcing pipeline executes cleanly
         assert result is not None
