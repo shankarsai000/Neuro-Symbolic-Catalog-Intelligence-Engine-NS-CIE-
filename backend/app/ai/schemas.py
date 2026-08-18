@@ -48,7 +48,10 @@ class ConfidenceBreakdown(BaseModel):
     provenance_score: float = Field(..., ge=0.0, le=1.0)
     lov_match_score: float = Field(..., ge=0.0, le=1.0)
     rule_compliance_score: float = Field(..., ge=0.0, le=1.0)
+    review_tier: str = Field(default="AUTO_APPROVED", description="AUTO_APPROVED (>=0.90), REVIEW (0.75-0.89), HITL_REQUIRED (<0.75)")
     needs_review: bool = False
+    explanation: str = Field(default="", description="Explainable mathematical derivation")
+    field_confidences: dict[str, float] = Field(default_factory=dict, description="Field-level confidence breakdown")
 
 
 class EnrichmentRequest(BaseModel):

@@ -132,6 +132,7 @@ async def run_enrichment_pipeline(
             return snippet
         return default
 
+    field_confs = confidence_breakdown.field_confidences
     provenance_map = {
         "brand": FieldProvenance(
             value=final_attributes.brand,
@@ -139,7 +140,7 @@ async def run_enrichment_pipeline(
             source_type=sourced_evidence.source_type,
             evidence=f"Resolved from '{request.raw_manuf}'",
             retrieved_at=sourced_evidence.retrieved_at,
-            confidence=brand_score,
+            confidence=field_confs.get("brand", brand_score),
             is_lov_validated=True,
         ).model_dump(),
         "item_type": FieldProvenance(
@@ -148,7 +149,7 @@ async def run_enrichment_pipeline(
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("item_type", f"Extracted from '{sanitized_desc[:60]}'"),
             retrieved_at=sourced_evidence.retrieved_at,
-            confidence=confidence_breakdown.total_confidence,
+            confidence=field_confs.get("item_type", confidence_breakdown.total_confidence),
             is_lov_validated=master_data_repository.is_valid_lov("item_type", final_attributes.item_type),
         ).model_dump(),
         "voltage": FieldProvenance(
@@ -157,7 +158,7 @@ async def run_enrichment_pipeline(
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("voltage", "Extracted voltage rating"),
             retrieved_at=sourced_evidence.retrieved_at,
-            confidence=confidence_breakdown.total_confidence,
+            confidence=field_confs.get("voltage", confidence_breakdown.total_confidence),
             is_lov_validated=master_data_repository.is_valid_lov("voltage", final_attributes.voltage),
         ).model_dump(),
         "dimensions": FieldProvenance(
@@ -166,7 +167,7 @@ async def run_enrichment_pipeline(
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("dimensions", "Converted fractional size"),
             retrieved_at=sourced_evidence.retrieved_at,
-            confidence=confidence_breakdown.total_confidence,
+            confidence=field_confs.get("dimensions", confidence_breakdown.total_confidence),
             is_lov_validated=True,
         ).model_dump(),
         "material": FieldProvenance(
@@ -175,7 +176,7 @@ async def run_enrichment_pipeline(
             source_type=sourced_evidence.source_type,
             evidence=_ev_text("material", "Extracted material specification"),
             retrieved_at=sourced_evidence.retrieved_at,
-            confidence=confidence_breakdown.total_confidence,
+            confidence=field_confs.get("material", confidence_breakdown.total_confidence),
             is_lov_validated=master_data_repository.is_valid_lov("material", final_attributes.material),
         ).model_dump(),
     }
