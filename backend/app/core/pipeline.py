@@ -132,6 +132,15 @@ async def run_enrichment_pipeline(
 
     # Step 8: Field-Level Provenance Mapping
     evidence_snippets = sourced_evidence.evidence_snippets
+
+    def _ev_text(key: str, default: str) -> str:
+        snippet = evidence_snippets.get(key)
+        if isinstance(snippet, dict):
+            return str(snippet.get("evidence") or snippet.get("value") or default)
+        if isinstance(snippet, str) and snippet:
+            return snippet
+        return default
+
     provenance_map = {
         "brand": FieldProvenance(
             value=guarded_brand,
@@ -146,7 +155,7 @@ async def run_enrichment_pipeline(
             value=guarded_item_type,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
-            evidence=evidence_snippets.get("item_type") or f"Extracted from '{sanitized_desc[:60]}'",
+            evidence=_ev_text("item_type", f"Extracted from '{sanitized_desc[:60]}'"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
             is_lov_validated=master_data_repository.is_valid_lov("item_type", guarded_item_type),
@@ -155,7 +164,7 @@ async def run_enrichment_pipeline(
             value=guarded_voltage,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
-            evidence=evidence_snippets.get("voltage") or "Extracted voltage rating",
+            evidence=_ev_text("voltage", "Extracted voltage rating"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
             is_lov_validated=master_data_repository.is_valid_lov("voltage", guarded_voltage),
@@ -164,7 +173,7 @@ async def run_enrichment_pipeline(
             value=guarded_dimensions,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
-            evidence=evidence_snippets.get("dimensions") or "Converted fractional size",
+            evidence=_ev_text("dimensions", "Converted fractional size"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
             is_lov_validated=True,
@@ -173,7 +182,7 @@ async def run_enrichment_pipeline(
             value=guarded_material,
             source_url=sourced_evidence.source_url or "distributor_feed",
             source_type=sourced_evidence.source_type,
-            evidence=evidence_snippets.get("material") or "Extracted material specification",
+            evidence=_ev_text("material", "Extracted material specification"),
             retrieved_at=sourced_evidence.retrieved_at,
             confidence=confidence_breakdown.total_confidence,
             is_lov_validated=master_data_repository.is_valid_lov("material", guarded_material),

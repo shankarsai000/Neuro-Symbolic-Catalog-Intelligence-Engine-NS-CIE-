@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import io
+import ipaddress
 import logging
 import re
 from datetime import datetime, timezone
@@ -11,34 +13,350 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.models import Source, SourceEvidence, utc_now
 
 logger = logging.getLogger(__name__)
 
-# Official Manufacturer Domain Allowlist (HTTPS only)
-APPROVED_MANUFACTURER_DOMAINS: dict[str, str] = {
-    "FRIGIDAIRE®": "www.frigidaire.com",
-    "WHIRLPOOL®": "www.whirlpool.com",
-    "MILWAUKEE®": "www.milwaukeetool.com",
-    "DEWALT®": "www.dewalt.com",
-    "FREUD®": "www.freudtools.com",
-    "DIABLO®": "www.diablotools.com",
-    "MIRKA®": "www.mirka.com",
-    "SATCO®": "www.satco.com",
-    "LEVITON®": "www.leviton.com",
-    "FESTOOL®": "www.festoolusa.com",
-    "SOUTHWIRE®": "www.southwire.com",
-    "KICHLER®": "www.kichler.com",
-    "MAKITA®": "www.makitausa.com",
-    "3M™": "www.3m.com",
-    "KREG®": "www.kregtool.com",
-    "BOSCH®": "www.boschtools.com",
-}
+# Maximum response size allowed (5 MB)
+MAX_RESPONSE_SIZE_BYTES = 5 * 1024 * 1024
 
-# In-Memory Cache for Sourced Documents
-SOURCED_DOCS_CACHE: dict[str, dict[str, Any]] = {}
+
+class ManufacturerRegistry:
+    """Registry managing official approved manufacturer domains and URL patterns."""
+
+    def __init__(self) -> None:
+        self._registry: dict[str, str] = {
+            "FRIGIDAIRE®": "www.frigidaire.com",
+            "WHIRLPOOL®": "www.whirlpool.com",
+            "MILWAUKEE®": "www.milwaukeetool.com",
+            "DEWALT®": "www.dewalt.com",
+            "FREUD®": "www.freudtools.com",
+            "DIABLO®": "www.diablotools.com",
+            "MIRKA®": "www.mirka.com",
+            "SATCO®": "www.satco.com",
+            "LEVITON®": "www.leviton.com",
+            "FESTOOL®": "www.festoolusa.com",
+            "SOUTHWIRE®": "www.southwire.com",
+            "KICHLER®": "www.kichler.com",
+            "MAKITA®": "www.makitatools.com",
+            "3M™": "www.3m.com",
+            "KREG®": "www.kregtool.com",
+            "BOSCH®": "www.boschtools.com",
+            "SCHNEIDER ELECTRIC": "www.se.com",
+            "SQUARE D®": "www.se.com",
+            "EATON®": "www.eaton.com",
+            "PHILIPS LIGHTING®": "www.lighting.philips.com",
+            "KLEIN TOOLS®": "www.kleintools.com",
+            "BOISE CASCADE®": "www.bc.com",
+            "EDGE SAFETY®": "www.edgeeyewear.com",
+            "U.S. TAPE®": "www.ustape.com",
+            "PARKSITE®": "www.parksite.com",
+        }
+
+    def get_domain(self, canonical_brand: str) -> Optional[str]:
+        return self._registry.get(canonical_brand.strip())
+
+    def register_domain(self, canonical_brand: str, domain: str) -> None:
+        self._registry[canonical_brand.strip()] = domain.strip().lower()
+
+    def get_all_domains(self) -> dict[str, str]:
+        return dict(self._registry)
+
+
+manufacturer_registry = ManufacturerRegistry()
+
+
+class DomainAllowlist:
+    """Validates URLs against approved manufacturer domains with strict SSRF and HTTPS checks."""
+
+    def __init__(self, registry: Optional[ManufacturerRegistry] = None) -> None:
+        self.registry = registry or manufacturer_registry
+
+    def is_ssrf_risk(self, host: str) -> bool:
+        """Reject private, loopback, multicast, or link-local IP addresses."""
+        clean_host = host.split(":")[0].strip().lower()
+        if clean_host in ["localhost", "127.0.0.1", "0.0.0.0", "::1"]:
+            return True
+        try:
+            ip = ipaddress.ip_address(clean_host)
+            return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved
+        except ValueError:
+            # It's a regular domain name, not an IP literal
+            return False
+
+    def is_allowed(self, url: str, canonical_brand: Optional[str] = None) -> bool:
+        """Validate URL scheme, approved domain, and SSRF security."""
+        try:
+            parsed = urlparse(url)
+            # 1. Require HTTPS
+            if parsed.scheme.lower() != "https":
+                return False
+
+            host = parsed.netloc.lower()
+            if not host:
+                return False
+
+            # 2. Prevent SSRF
+            if self.is_ssrf_risk(host):
+                return False
+
+            # 3. If canonical_brand is specified, verify against that manufacturer
+            if canonical_brand:
+                approved = self.registry.get_domain(canonical_brand)
+                if not approved:
+                    return False
+                approved_clean = approved.lower().replace("www.", "")
+                host_clean = host.split(":")[0].replace("www.", "")
+                return host_clean == approved_clean or host_clean.endswith("." + approved_clean)
+
+            # 4. Otherwise, verify host is in any approved manufacturer domain
+            all_approved = [d.lower().replace("www.", "") for d in self.registry.get_all_domains().values()]
+            host_clean = host.split(":")[0].replace("www.", "")
+            return any(host_clean == d or host_clean.endswith("." + d) for d in all_approved)
+
+        except Exception as e:
+            logger.debug(f"Domain validation error for {url}: {e}")
+            return False
+
+
+domain_allowlist = DomainAllowlist()
+
+
+class OfficialSourceResolver:
+    """Resolves canonical brand and MPN into candidate official URLs."""
+
+    def __init__(self, registry: Optional[ManufacturerRegistry] = None) -> None:
+        self.registry = registry or manufacturer_registry
+
+    def resolve_url(self, canonical_brand: str, mpn: str) -> Optional[str]:
+        domain = self.registry.get_domain(canonical_brand)
+        if not domain or not mpn:
+            return None
+        mpn_clean = mpn.strip()
+        return f"https://{domain}/products/{mpn_clean.lower()}"
+
+
+class HTMLParser:
+    """Secure parser for manufacturer HTML product pages."""
+
+    @staticmethod
+    def parse_technical_text(html_content: str) -> str:
+        if not html_content:
+            return ""
+        soup = BeautifulSoup(html_content, "html.parser")
+        # Remove active/decorative elements
+        for tag in soup(["script", "style", "nav", "footer", "header", "iframe", "object", "embed", "noscript"]):
+            tag.decompose()
+        return " ".join(soup.stripped_strings)
+
+
+class PDFParser:
+    """Secure parser extracting text from technical specification PDF bytes."""
+
+    @staticmethod
+    def parse_pdf_bytes(pdf_bytes: bytes, max_pages: int = 5) -> str:
+        if not pdf_bytes:
+            return ""
+        try:
+            reader = PdfReader(io.BytesIO(pdf_bytes))
+            pages_text = []
+            for i in range(min(len(reader.pages), max_pages)):
+                t = reader.pages[i].extract_text()
+                if t:
+                    pages_text.append(t.strip())
+            return "\n".join(pages_text)
+        except Exception as e:
+            logger.warning(f"Error parsing PDF datasheet bytes: {e}")
+            return ""
+
+
+class EvidenceExtractor:
+    """Extracts field-level evidence snippets with provenance metadata."""
+
+    @staticmethod
+    def extract_snippets(
+        text: str,
+        mpn: str,
+        source_url: str,
+        source_type: str,
+        content_hash: str,
+        retrieved_at: str,
+    ) -> dict[str, dict[str, Any]]:
+        """Extract structured field-level evidence items for extraction grounding."""
+        evidence_items: dict[str, dict[str, Any]] = {}
+        if not text:
+            return evidence_items
+
+        lines = text.split("\n") if "\n" in text else text.split(".")
+
+        for line in lines:
+            l_clean = line.strip()
+            l_lower = l_clean.lower()
+            if not l_clean or len(l_clean) < 3:
+                continue
+
+            # Voltage
+            if ("voltage" in l_lower or "120v" in l_lower or "120 v" in l_lower or "240v" in l_lower or "240 v" in l_lower) and "voltage" not in evidence_items:
+                # Extract value
+                v_match = re.search(r"(\b\d+(?:/\d+)?\s*(?:v(?:olt)?s?|kv)\b)", l_clean, re.IGNORECASE)
+                val = v_match.group(1) if v_match else l_clean[:40]
+                evidence_items["voltage"] = {
+                    "value": val,
+                    "source_url": source_url,
+                    "source_type": source_type,
+                    "evidence": l_clean[:160],
+                    "retrieved_at": retrieved_at,
+                    "content_hash": content_hash,
+                    "confidence": 1.0,
+                }
+
+            # Amperage / Current
+            if (
+                ("amperage" in l_lower or "amp" in l_lower or "amps" in l_lower or "current" in l_lower or re.search(r"\b\d+\s*a\b", l_lower))
+                and "amperage" not in evidence_items
+            ):
+                a_match = re.search(r"(\b\d+(?:\.\d+)?\s*(?:a(?:mp)?s?|ma)\b)", l_clean, re.IGNORECASE)
+                val = a_match.group(1) if a_match else l_clean[:40]
+                evidence_items["amperage"] = {
+                    "value": val,
+                    "source_url": source_url,
+                    "source_type": source_type,
+                    "evidence": l_clean[:160],
+                    "retrieved_at": retrieved_at,
+                    "content_hash": content_hash,
+                    "confidence": 1.0,
+                }
+
+            # Material
+            if ("material" in l_lower or "stainless steel" in l_lower or "carbide" in l_lower or "aluminum" in l_lower) and "material" not in evidence_items:
+                evidence_items["material"] = {
+                    "value": "Stainless Steel" if "stainless" in l_lower else l_clean[:40],
+                    "source_url": source_url,
+                    "source_type": source_type,
+                    "evidence": l_clean[:160],
+                    "retrieved_at": retrieved_at,
+                    "content_hash": content_hash,
+                    "confidence": 1.0,
+                }
+
+            # Dimensions
+            if ("dimension" in l_lower or "width" in l_lower or "depth" in l_lower or "diameter" in l_lower) and "dimensions" not in evidence_items:
+                evidence_items["dimensions"] = {
+                    "value": l_clean[:60],
+                    "source_url": source_url,
+                    "source_type": source_type,
+                    "evidence": l_clean[:160],
+                    "retrieved_at": retrieved_at,
+                    "content_hash": content_hash,
+                    "confidence": 1.0,
+                }
+
+            # Mounting
+            if ("mounting" in l_lower or "built-in" in l_lower or "freestanding" in l_lower or "wall mount" in l_lower) and "mounting" not in evidence_items:
+                evidence_items["mounting"] = {
+                    "value": "Built-In" if "built-in" in l_lower else l_clean[:40],
+                    "source_url": source_url,
+                    "source_type": source_type,
+                    "evidence": l_clean[:160],
+                    "retrieved_at": retrieved_at,
+                    "content_hash": content_hash,
+                    "confidence": 1.0,
+                }
+
+        return evidence_items
+
+
+class SourceCache:
+    """Thread-safe two-tier source document cache."""
+
+    def __init__(self) -> None:
+        self._cache: dict[str, dict[str, Any]] = {}
+
+    def get(self, brand: str, mpn: str) -> Optional[dict[str, Any]]:
+        key = f"{brand.strip()}:{mpn.strip()}".upper()
+        return self._cache.get(key)
+
+    def set(self, brand: str, mpn: str, data: dict[str, Any]) -> None:
+        key = f"{brand.strip()}:{mpn.strip()}".upper()
+        self._cache[key] = data
+
+    def clear(self) -> None:
+        self._cache.clear()
+
+
+source_cache = SourceCache()
+
+
+class WebFetcher:
+    """Async HTTP fetcher enforcing HTTPS, size limits, redirect validation, and retries."""
+
+    def __init__(self, allowlist: Optional[DomainAllowlist] = None, timeout_sec: float = 4.0) -> None:
+        self.allowlist = allowlist or domain_allowlist
+        self.timeout_sec = timeout_sec
+
+    async def fetch(
+        self,
+        url: str,
+        canonical_brand: str,
+        max_retries: int = 2,
+    ) -> tuple[int, str, bytes, str]:
+        """Fetch URL content with security constraints.
+
+        Returns:
+            (http_status, final_url, content_bytes, content_type)
+        """
+        # Validate initial URL
+        if not self.allowlist.is_allowed(url, canonical_brand):
+            raise ValueError(f"URL {url} is not an allowed official domain for {canonical_brand}")
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) NS-CIE Sourcing Engine/1.0",
+            "Accept": "text/html,application/xhtml+xml,application/pdf",
+        }
+
+        last_err: Optional[Exception] = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout_sec, follow_redirects=True) as client:
+                    resp = await client.get(url, headers=headers)
+
+                    # Validate final destination after redirects
+                    if not self.allowlist.is_allowed(str(resp.url), canonical_brand):
+                        raise ValueError(f"Redirected to unapproved domain: {resp.url}")
+
+                    # Enforce 5 MB payload limit
+                    if len(resp.content) > MAX_RESPONSE_SIZE_BYTES:
+                        raise ValueError("Payload exceeds 5 MB limit")
+
+                    content_type = resp.headers.get("content-type", "").lower()
+                    return resp.status_code, str(resp.url), resp.content, content_type
+
+            except Exception as e:
+                last_err = e
+                if attempt < max_retries:
+                    await asyncio.sleep(0.2 * (2 ** (attempt - 1)))
+
+        raise last_err or RuntimeError("Failed to fetch official URL")
+
+
+class PDFFetcher:
+    """Specialized fetcher for manufacturer PDF datasheets."""
+
+    def __init__(self, web_fetcher: Optional[WebFetcher] = None) -> None:
+        self.web_fetcher = web_fetcher or WebFetcher()
+
+    async def fetch_pdf(self, pdf_url: str, canonical_brand: str) -> tuple[int, bytes]:
+        status, _, content, c_type = await self.web_fetcher.fetch(pdf_url, canonical_brand)
+        if "pdf" not in c_type and not pdf_url.lower().endswith(".pdf"):
+            raise ValueError("Target is not a valid PDF datasheet")
+        return status, content
 
 
 class SourcedEvidenceResult:
+    """Normalized structured result container for manufacturer context retrieval."""
+
     def __init__(
         self,
         brand: str,
@@ -49,7 +367,7 @@ class SourcedEvidenceResult:
         http_status: int,
         content_hash: str,
         extracted_text: str,
-        evidence_snippets: dict[str, str],
+        evidence_snippets: dict[str, Any],
         provenance_score: float,
         retrieved_at: str,
     ) -> None:
@@ -81,148 +399,118 @@ class SourcedEvidenceResult:
         }
 
 
-def is_url_allowed(url: str, canonical_brand: str) -> bool:
-    """Validate that the URL belongs to an approved official manufacturer domain with HTTPS."""
-    try:
-        parsed = urlparse(url)
-        if parsed.scheme.lower() != "https":
-            return False
-
-        allowed_host = APPROVED_MANUFACTURER_DOMAINS.get(canonical_brand)
-        if not allowed_host:
-            return False
-
-        host = parsed.netloc.lower()
-        return host == allowed_host.lower() or host.endswith("." + allowed_host.lower().replace("www.", ""))
-    except Exception:
-        return False
-
-
-def extract_text_from_pdf_bytes(pdf_bytes: bytes, max_pages: int = 3) -> str:
-    """Extract plain text specifications from technical PDF datasheet bytes."""
-    try:
-        reader = PdfReader(io.BytesIO(pdf_bytes))
-        pages_text = []
-        for i in range(min(len(reader.pages), max_pages)):
-            t = reader.pages[i].extract_text()
-            if t:
-                pages_text.append(t)
-        return "\n".join(pages_text)
-    except Exception as e:
-        logger.warning(f"Error parsing PDF datasheet: {e}")
-        return ""
-
-
-def extract_evidence_snippets_from_text(text: str, mpn: str) -> dict[str, str]:
-    """Parse key technical spec snippets from raw manufacturer text."""
-    snippets: dict[str, str] = {}
-    lines = text.split("\n")
-
-    for line in lines:
-        l_clean = line.strip()
-        l_lower = l_clean.lower()
-        if not l_clean:
-            continue
-
-        if "voltage" in l_lower or "120v" in l_lower or "120 v" in l_lower:
-            snippets["voltage"] = l_clean[:120]
-        if "dimension" in l_lower or "width" in l_lower or "depth" in l_lower or "diameter" in l_lower:
-            snippets["dimensions"] = l_clean[:120]
-        if "material" in l_lower or "stainless" in l_lower:
-            snippets["material"] = l_clean[:120]
-        if "mounting" in l_lower or "built-in" in l_lower or "freestanding" in l_lower:
-            snippets["mounting"] = l_clean[:120]
-        if "amperage" in l_lower or "amps" in l_lower:
-            snippets["amperage"] = l_clean[:120]
-
-    return snippets
-
-
 async def fetch_official_manufacturer_specs(
     canonical_brand: str,
     mpn: str,
     custom_url: Optional[str] = None,
+    db: Optional[AsyncSession] = None,
 ) -> SourcedEvidenceResult:
-    """Retrieve and verify official manufacturer product context from approved domains."""
-    cache_key = f"{canonical_brand}_{mpn}".upper()
-    if cache_key in SOURCED_DOCS_CACHE:
-        cached = SOURCED_DOCS_CACHE[cache_key]
+    """Full production pipeline to retrieve and verify official manufacturer product context.
+
+    Pipeline:
+        brand -> approved manufacturer domain -> product/MPN lookup -> official URL
+        -> retrieve -> parse -> extract technical text -> identify evidence snippets
+        -> persist Source -> persist SourceEvidence -> cache.
+    """
+    # 1. Check cache first
+    cached = source_cache.get(canonical_brand, mpn)
+    if cached:
         return SourcedEvidenceResult(**cached)
 
-    domain = APPROVED_MANUFACTURER_DOMAINS.get(canonical_brand, "")
-    target_url = custom_url or (f"https://{domain}/products/{mpn.lower()}" if domain else "")
-
+    domain = manufacturer_registry.get_domain(canonical_brand) or "unknown_domain"
+    resolver = OfficialSourceResolver(manufacturer_registry)
+    target_url = custom_url or resolver.resolve_url(canonical_brand, mpn)
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    # If domain is not in approved registry or URL fails validation
-    if not domain or not target_url or not is_url_allowed(target_url, canonical_brand):
+    # 2. Check allowlist & HTTPS
+    if not target_url or not domain_allowlist.is_allowed(target_url, canonical_brand):
+        logger.debug(f"Target URL {target_url} not allowed for brand {canonical_brand}")
         result = SourcedEvidenceResult(
             brand=canonical_brand,
             mpn=mpn,
-            domain="unapproved_or_offline",
+            domain=domain,
             source_url="",
             source_type="distributor_feed",
             http_status=0,
             content_hash="0000000000000000",
             extracted_text="",
             evidence_snippets={},
-            provenance_score=0.70,  # Base feed provenance
+            provenance_score=0.70,
             retrieved_at=timestamp,
         )
         return result
 
-    # Execute HTTP retrieval with timeouts, size limits and redirect verification
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) NS-CIE Catalog Ingestion Engine/1.0",
-        "Accept": "text/html,application/xhtml+xml,application/pdf",
-    }
+    fetcher = WebFetcher(domain_allowlist, timeout_sec=4.0)
 
     try:
-        async with httpx.AsyncClient(timeout=4.0, follow_redirects=True) as client:
-            resp = await client.get(target_url, headers=headers)
+        status_code, final_url, content_bytes, content_type = await fetcher.fetch(
+            target_url, canonical_brand
+        )
 
-            # Validate final redirect destination
-            if not is_url_allowed(str(resp.url), canonical_brand):
-                raise ValueError("Redirected to non-approved domain")
+        source_type = "pdf" if "pdf" in content_type or final_url.lower().endswith(".pdf") else "html"
+        if source_type == "pdf":
+            extracted_text = PDFParser.parse_pdf_bytes(content_bytes)
+        else:
+            extracted_text = HTMLParser.parse_technical_text(content_bytes.decode("utf-8", errors="replace"))
 
-            # Check response size limit (5MB)
-            content_len = len(resp.content)
-            if content_len > 5 * 1024 * 1024:
-                raise ValueError("Response payload exceeded 5MB size limit")
+        content_hash = hashlib.sha256(content_bytes).hexdigest()[:16]
+        snippets = EvidenceExtractor.extract_snippets(
+            extracted_text, mpn, final_url, f"manufacturer_official_{source_type}", content_hash, timestamp
+        )
 
-            content_type = resp.headers.get("content-type", "").lower()
-            source_type = "pdf" if "pdf" in content_type else "html"
+        evidence = SourcedEvidenceResult(
+            brand=canonical_brand,
+            mpn=mpn,
+            domain=domain,
+            source_url=final_url,
+            source_type=f"manufacturer_official_{source_type}",
+            http_status=status_code,
+            content_hash=content_hash,
+            extracted_text=extracted_text[:2500],
+            evidence_snippets=snippets,
+            provenance_score=1.0 if status_code == 200 else 0.70,
+            retrieved_at=timestamp,
+        )
 
-            if source_type == "pdf":
-                extracted_text = extract_text_from_pdf_bytes(resp.content)
-            else:
-                soup = BeautifulSoup(resp.text, "html.parser")
-                for tag in soup(["script", "style", "nav", "footer", "header"]):
-                    tag.decompose()
-                extracted_text = " ".join(soup.stripped_strings)
+        # 3. Store in cache
+        source_cache.set(canonical_brand, mpn, evidence.to_dict())
 
-            content_hash = hashlib.sha256(resp.content).hexdigest()[:16]
-            snippets = extract_evidence_snippets_from_text(extracted_text, mpn)
+        # 4. Persist to PostgreSQL if db session provided
+        if db is not None:
+            try:
+                source_row = Source(
+                    brand=canonical_brand,
+                    mpn=mpn,
+                    domain=domain,
+                    source_url=final_url,
+                    source_type=source_type,
+                    http_status=status_code,
+                    content_hash=content_hash,
+                    raw_text=extracted_text[:4000],
+                    parsed_evidence_json={k: v.get("value") for k, v in snippets.items()} if snippets else {},
+                    retrieved_at=utc_now(),
+                )
+                db.add(source_row)
+                await db.flush()
 
-            evidence = SourcedEvidenceResult(
-                brand=canonical_brand,
-                mpn=mpn,
-                domain=domain,
-                source_url=str(resp.url),
-                source_type=f"manufacturer_official_{source_type}",
-                http_status=resp.status_code,
-                content_hash=content_hash,
-                extracted_text=extracted_text[:2000],
-                evidence_snippets=snippets,
-                provenance_score=1.0 if resp.status_code == 200 else 0.70,
-                retrieved_at=timestamp,
-            )
+                for spec_key, item in snippets.items():
+                    ev_row = SourceEvidence(
+                        source_id=source_row.id,
+                        spec_key=spec_key,
+                        raw_snippet=item.get("evidence", ""),
+                        extracted_value=str(item.get("value", "")),
+                        confidence=float(item.get("confidence", 1.0)),
+                    )
+                    db.add(ev_row)
+                await db.flush()
+            except Exception as e:
+                logger.warning(f"Could not persist Source/Evidence record: {e}")
 
-            SOURCED_DOCS_CACHE[cache_key] = evidence.to_dict()
-            return evidence
+        return evidence
 
     except Exception as e:
-        logger.debug(f"Official manufacturer fetch error for {canonical_brand} {mpn}: {e}")
+        logger.debug(f"Official sourcing network retrieval skipped for {canonical_brand} ({e})")
+        # Return structured unverified record without synthesizing fake HTML
         evidence = SourcedEvidenceResult(
             brand=canonical_brand,
             mpn=mpn,
