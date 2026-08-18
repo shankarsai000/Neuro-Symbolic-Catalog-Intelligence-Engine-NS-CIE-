@@ -3,7 +3,13 @@ from __future__ import annotations
 from app.agents.resolver import resolve_canonical_brand
 from app.agents.scraper import fetch_manufacturer_context
 from app.ai.extractor import extract_product_specs
-from app.ai.schemas import EnrichmentRequest, EnrichmentResponse, ExtractedAttributes
+from app.ai.schemas import (
+    ChannelDescriptions,
+    EnrichmentRequest,
+    EnrichmentResponse,
+    ExtractedAttributes,
+)
+from app.core.delivery import build_channel_descriptions, generate_252_column_record
 from app.core.guardrails import (
     decimal_to_fraction,
     enforce_uom_spacing,
@@ -20,8 +26,9 @@ async def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentRespo
     Step 3: Agentic web sourcing: Async retrieval of manufacturer product datasheet context with in-memory caching.
     Step 4: Zero-shot LLM extraction grounded in datasheet context.
     Step 5: Deterministic guardrails (UOM spacing & fraction formatting) applied on extracted attributes.
-    Step 6: Construction of standardized Unilog invoice description (ALL CAPS, <= 40 chars).
-    Step 7: Return finalized EnrichmentResponse.
+    Step 6: Construction of standardized Unilog invoice & multi-channel descriptions.
+    Step 7: Generation of static 252-column schema delivery preview.
+    Step 8: Return finalized EnrichmentResponse.
     """
     # Step 1: Placeholder sanitization on input strings
     sanitized_desc = clean_placeholders(request.part_desc) or request.part_desc
@@ -83,29 +90,30 @@ async def run_enrichment_pipeline(request: EnrichmentRequest) -> EnrichmentRespo
         raw_specs=guarded_specs,
     )
 
-    # Step 6: Construct standardized Unilog invoice description
-    # Pattern: [item_type] [mounting] [material] [voltage] [dimensions]
-    desc_components: list[str] = []
-    if final_attributes.item_type:
-        desc_components.append(final_attributes.item_type)
-    if final_attributes.mounting:
-        desc_components.append(final_attributes.mounting)
-    if final_attributes.material:
-        mat_token = "SST" if "stainless" in final_attributes.material.lower() else final_attributes.material
-        desc_components.append(mat_token)
-    if final_attributes.voltage:
-        desc_components.append(final_attributes.voltage)
-    if final_attributes.dimensions:
-        desc_components.append(final_attributes.dimensions)
+    # Step 6: Multi-Channel Description Generation
+    channel_dict = build_channel_descriptions(
+        brand=guarded_brand,
+        mpn=guarded_mpn,
+        attrs=final_attributes,
+    )
+    channel_desc = ChannelDescriptions(**channel_dict)
 
-    raw_invoice_string = " ".join(desc_components) if desc_components else sanitized_desc
-    final_invoice_desc = format_invoice_desc(raw_invoice_string)
+    # Step 7: 252-Column Schema Record Mapping
+    delivery_record = generate_252_column_record(
+        raw_req=request,
+        canonical_brand=guarded_brand or "",
+        attrs=final_attributes,
+        descriptions=channel_dict,
+        confidence=confidence,
+    )
 
-    # Step 7: Final response
+    # Step 8: Final response
     return EnrichmentResponse(
         mfg_part_num=request.mfg_part_num,
         attributes=final_attributes,
-        invoice_desc=final_invoice_desc,
+        invoice_desc=channel_desc.invoice_desc,
+        channel_descriptions=channel_desc,
         status=status,
         confidence_score=confidence,
+        delivery_record_preview=delivery_record,
     )

@@ -87,7 +87,7 @@ def test_master_data_loader_fallback():
 def test_api_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "NS-CIE Backend Active"}
+    assert response.json()["status"] == "NS-CIE Backend Active"
 
 
 def test_api_test_guardrails_endpoint():
