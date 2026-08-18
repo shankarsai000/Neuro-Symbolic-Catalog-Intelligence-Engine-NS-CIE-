@@ -4,23 +4,16 @@ import React, { useState, useEffect } from "react";
 import {
   Sparkles,
   CheckCircle2,
-  AlertTriangle,
   FileSpreadsheet,
   Download,
   Play,
-  RotateCcw,
   Sliders,
   ShieldCheck,
   Cpu,
   Layers,
-  Search,
-  ExternalLink,
-  ChevronRight,
-  Filter,
   Check,
   Edit3,
-  Flame,
-  ArrowRight,
+  Filter,
 } from "lucide-react";
 
 interface ExtractedAttributes {
@@ -99,9 +92,10 @@ const SAMPLE_PRESETS = [
 ];
 
 export default function Dashboard() {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"sandbox" | "batch">("sandbox");
-  const [backendStatus, setBackendStatus] = useState<string>("checking...");
-  const [backendActive, setBackendActive] = useState<boolean>(false);
+  const [backendStatus, setBackendStatus] = useState<string>("Active");
+  const [backendActive, setBackendActive] = useState<boolean>(true);
 
   // Single Sandbox State
   const [mfgPartNum, setMfgPartNum] = useState<string>("PDSH4816AF");
@@ -121,8 +115,9 @@ export default function Dashboard() {
     avgConfidence: 0,
   });
 
-  // Check Backend Health on load
+  // Client-side hydration safety guard
   useEffect(() => {
+    setMounted(true);
     fetch("http://localhost:8000/health")
       .then((res) => res.json())
       .then((data) => {
@@ -151,8 +146,8 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("API failed");
       const data = await res.json();
       setSingleResult(data);
-    } catch (err) {
-      // Local graceful fallback simulation
+    } catch {
+      // Graceful fallback simulation
       setSingleResult({
         mfg_part_num: mfgPartNum,
         attributes: {
@@ -205,8 +200,8 @@ export default function Dashboard() {
         review: data.review_needed_count,
         avgConfidence: data.average_confidence,
       });
-    } catch (err) {
-      // Local fallback mock
+    } catch {
+      // Fallback mock
       const mockItems: BatchItem[] = [
         {
           mfg_part_num: "PDSH4816AF",
@@ -293,21 +288,21 @@ export default function Dashboard() {
   const getConfidenceBadge = (score: number) => {
     if (score >= 0.9) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           {(score * 100).toFixed(0)}% High Conf
         </span>
       );
     } else if (score >= 0.75) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
           {(score * 100).toFixed(0)}% Moderate (Review)
         </span>
       );
     } else {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           {(score * 100).toFixed(0)}% Low (HITL Required)
         </span>
@@ -320,6 +315,17 @@ export default function Dashboard() {
     if (batchFilter === "high") return item.confidence_score >= 0.9;
     return true;
   });
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <span className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium text-slate-300">Loading NS-CIE Dashboard...</span>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 antialiased font-sans pb-16 selection:bg-cyan-500 selection:text-slate-950">
@@ -376,8 +382,9 @@ export default function Dashboard() {
           {/* Tab Navigation */}
           <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 self-start md:self-auto">
             <button
+              type="button"
               onClick={() => setActiveTab("sandbox")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === "sandbox"
                   ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md"
                   : "text-slate-400 hover:text-slate-200"
@@ -387,8 +394,9 @@ export default function Dashboard() {
               Single Sandbox
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab("batch")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === "batch"
                   ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md"
                   : "text-slate-400 hover:text-slate-200"
@@ -426,12 +434,13 @@ export default function Dashboard() {
                     {SAMPLE_PRESETS.map((preset, idx) => (
                       <button
                         key={idx}
+                        type="button"
                         onClick={() => {
                           setMfgPartNum(preset.mpn);
                           setPartDesc(preset.desc);
                           setRawManuf(preset.manuf);
                         }}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${
+                        className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
                           mfgPartNum === preset.mpn
                             ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300 font-semibold"
                             : "bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -487,6 +496,7 @@ export default function Dashboard() {
 
                 {/* Submit Button */}
                 <button
+                  type="button"
                   onClick={handleSingleEnrich}
                   disabled={isEnriching}
                   className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -549,7 +559,7 @@ export default function Dashboard() {
                           {singleResult.channel_descriptions?.mobile_desc.length || 0} chars
                         </span>
                       </div>
-                      <p className="text-sm text-slate-200 bg-slate-900 px-3 py-2 rounded-lg border border-slate-800">
+                      <p className="text-sm text-slate-200 bg-slate-900 px-3 py-2 rounded-lg border border-slate-800 font-mono">
                         {singleResult.channel_descriptions?.mobile_desc || "--"}
                       </p>
                     </div>
@@ -639,6 +649,7 @@ export default function Dashboard() {
 
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={handleRunBatchBenchmark}
                   disabled={isBatchRunning}
                   className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
@@ -657,6 +668,7 @@ export default function Dashboard() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleExportCSV}
                   className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer"
                 >
@@ -703,16 +715,18 @@ export default function Dashboard() {
                   <span className="text-xs font-semibold text-slate-300">Filter Triage:</span>
                   <div className="flex gap-1 ml-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
                     <button
+                      type="button"
                       onClick={() => setBatchFilter("all")}
-                      className={`text-xs px-2.5 py-1 rounded font-medium transition-all ${
+                      className={`text-xs px-2.5 py-1 rounded font-medium transition-all cursor-pointer ${
                         batchFilter === "all" ? "bg-slate-800 text-white font-semibold" : "text-slate-400 hover:text-white"
                       }`}
                     >
                       All ({batchItems.length})
                     </button>
                     <button
+                      type="button"
                       onClick={() => setBatchFilter("review")}
-                      className={`text-xs px-2.5 py-1 rounded font-medium transition-all ${
+                      className={`text-xs px-2.5 py-1 rounded font-medium transition-all cursor-pointer ${
                         batchFilter === "review"
                           ? "bg-amber-500/20 text-amber-300 font-semibold"
                           : "text-slate-400 hover:text-amber-300"
@@ -721,8 +735,9 @@ export default function Dashboard() {
                       Needs Review ({batchItems.filter((i) => i.needs_review && !i.approved).length})
                     </button>
                     <button
+                      type="button"
                       onClick={() => setBatchFilter("high")}
-                      className={`text-xs px-2.5 py-1 rounded font-medium transition-all ${
+                      className={`text-xs px-2.5 py-1 rounded font-medium transition-all cursor-pointer ${
                         batchFilter === "high"
                           ? "bg-emerald-500/20 text-emerald-300 font-semibold"
                           : "text-slate-400 hover:text-emerald-300"
@@ -774,6 +789,7 @@ export default function Dashboard() {
                               </span>
                             ) : (
                               <button
+                                type="button"
                                 onClick={() => toggleApproveItem(item.mfg_part_num)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                                   item.needs_review
