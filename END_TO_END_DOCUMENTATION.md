@@ -188,7 +188,7 @@ To launch the full containerized stack (FastAPI backend + Next.js frontend + NGI
 docker compose up --build
 ```
 
-- **Frontend Application**: `http://localhost:3000`
+- **Frontend Application**: `http://localhost:3005`
 - **FastAPI Documentation**: `http://localhost:8000/docs`
 - **Health Check**: `http://localhost:8000/health`
 

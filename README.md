@@ -98,7 +98,7 @@ Run the entire application (FastAPI backend + Next.js frontend + NGINX proxy) in
 docker compose up --build
 ```
 
-- **Frontend Web Dashboard**: `http://localhost:3000` (or `http://localhost`)
+- **Frontend Web Dashboard**: `http://localhost:3005` (or `http://localhost`)
 - **FastAPI OpenAPI Documentation**: `http://localhost:8000/docs`
 - **Health Check**: `http://localhost:8000/health`
 
@@ -121,7 +121,7 @@ cd frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:3000` to access the interactive enrichment dashboard.
+Open `http://localhost:3005` to access the interactive enrichment dashboard.
 
 ---
 

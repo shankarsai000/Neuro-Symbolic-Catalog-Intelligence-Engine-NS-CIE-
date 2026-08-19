@@ -81,13 +81,13 @@ services:
     container_name: nscie_frontend
     restart: unless-stopped
     environment:
-      PORT: 3000
+      PORT: 3005
       NEXT_PUBLIC_API_URL: http://localhost:8000
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3005/api/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
