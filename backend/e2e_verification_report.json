@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-08-18T13:49:11.097561+00:00",
+  "phase": "PHASE_18_PRODUCTION_E2E_VERIFICATION",
+  "status": "PASSED",
+  "execution_time_seconds": 122.19,
+  "records_processed": 1004,
+  "successes": 4,
+  "failures": 0,
+  "hitl_count": 50,
+  "schema_failures": 0,
+  "benchmark_metrics": {
+    "exact_match_accuracy": 0.15,
+    "field_level_accuracy": 1.0,
+    "category_accuracy": 1.0,
+    "brand_accuracy": 1.0,
+    "mpn_accuracy": 1.0,
+    "attribute_accuracy": 1.0,
+    "invoice_description_compliance": 1.0,
+    "uom_compliance": 1.0,
+    "fraction_compliance": 1.0,
+    "schema_compliance": 1.0
+  },
+  "predictions_hash": "77780a215fa32ff42a1410f03aa55e3212dfbdbf9da1a4efab1f7f75e68f59e6",
+  "confidence_distribution": {
+    "high_confidence_ge_90": 3,
+    "moderate_confidence_75_89": 17,
+    "low_confidence_lt_75": 0,
+    "average_confidence": 0.872
+  }
+}

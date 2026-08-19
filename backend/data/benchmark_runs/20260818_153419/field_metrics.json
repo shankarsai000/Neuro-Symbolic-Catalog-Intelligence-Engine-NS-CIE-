@@ -1,0 +1,179 @@
+{
+  "total_golden_records": 2,
+  "total_fields_compared": 398,
+  "exact_match_count": 4,
+  "normalized_match_count": 0,
+  "mismatch_count": 108,
+  "expected_empty_count": 286,
+  "field_accuracy": 0.03571428571428571,
+  "record_accuracy": 0.0,
+  "per_field_accuracy": {
+    "BRAND_NAME": 0.0,
+    "MANUFACTURER_NAME": 0.0,
+    "MANUFACTURER_PART_NUMBER": 1.0,
+    "MOBILE_DESC": 0.0,
+    "INVOICE_DESC": 0.0,
+    "SHORT_DESC": 0.0,
+    "LONG_DESC1": 0.0,
+    "RETAIL_DESC": 0.0,
+    "Classpath": 0.0,
+    "Dept": 0.0,
+    "Class": 0.0,
+    "Fine": 0.0,
+    "MFR URL": 0.0,
+    "Product Name": 0.0,
+    "With": 0.0,
+    "Standard/Approvals": 0.0,
+    "Warranty": 0.0,
+    "Product Image": 0.0,
+    "Specification Sheet": 0.0,
+    "Actual Image (Yes/No)": 1.0,
+    "ATTRIBUTE_LABEL 1": 0.0,
+    "ATTRIBUTE_VALUE 1": 0.0,
+    "ATTRIBUTE_LABEL 2": 0.0,
+    "ATTRIBUTE_LABEL 3": 0.0,
+    "ATTRIBUTE_VALUE 3": 0.0,
+    "ATTRIBUTE_LABEL 4": 0.0,
+    "ATTRIBUTE_VALUE 4": 0.0,
+    "ATTRIBUTE_UOM 4": 0.0,
+    "ATTRIBUTE_LABEL 5": 0.0,
+    "ATTRIBUTE_VALUE 5": 0.0,
+    "ATTRIBUTE_UOM 5": 0.0,
+    "ATTRIBUTE_LABEL 6": 0.0,
+    "ATTRIBUTE_VALUE 6": 0.0,
+    "ATTRIBUTE_LABEL 7": 0.0,
+    "ATTRIBUTE_LABEL 8": 0.0,
+    "ATTRIBUTE_VALUE 8": 0.0,
+    "ATTRIBUTE_LABEL 9": 0.0,
+    "ATTRIBUTE_VALUE 9": 0.0,
+    "ATTRIBUTE_UOM 9": 0.0,
+    "ATTRIBUTE_LABEL 10": 0.0,
+    "ATTRIBUTE_VALUE 10": 0.0,
+    "ATTRIBUTE_LABEL 11": 0.0,
+    "ATTRIBUTE_VALUE 11": 0.0,
+    "ATTRIBUTE_LABEL 12": 0.0,
+    "ATTRIBUTE_VALUE 12": 0.0,
+    "ATTRIBUTE_UOM 12": 0.0,
+    "ATTRIBUTE_LABEL 13": 0.0,
+    "ATTRIBUTE_VALUE 13": 0.0,
+    "ATTRIBUTE_LABEL 14": 0.0,
+    "ATTRIBUTE_LABEL 15": 0.0,
+    "ATTRIBUTE_VALUE 15": 0.0,
+    "MARKETING_DESCRIPTION": 0.0,
+    "ITEM_FEATURES_1": 0.0,
+    "ITEM_FEATURES_2": 0.0,
+    "ITEM_FEATURES_3": 0.0,
+    "ITEM_FEATURES_4": 0.0,
+    "ITEM_FEATURES_5": 0.0,
+    "ITEM_FEATURES_6": 0.0,
+    "ITEM_FEATURES_7": 0.0,
+    "ITEM_FEATURES_8": 0.0,
+    "ITEM_FEATURES_9": 0.0,
+    "ITEM_FEATURES_10": 0.0,
+    "ITEM_FEATURES_11": 0.0,
+    "ATTRIBUTE_UOM 10": 0.0,
+    "ATTRIBUTE_VALUE 14": 0.0
+  },
+  "worst_fields": [
+    {
+      "field": "BRAND_NAME",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "MANUFACTURER_NAME",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "MOBILE_DESC",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "INVOICE_DESC",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "SHORT_DESC",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "LONG_DESC1",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "RETAIL_DESC",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Classpath",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Dept",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Class",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Fine",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "MFR URL",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Product Name",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "With",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Standard/Approvals",
+      "accuracy": 0.0,
+      "total": 1
+    },
+    {
+      "field": "Warranty",
+      "accuracy": 0.0,
+      "total": 1
+    },
+    {
+      "field": "Product Image",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "Specification Sheet",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "ATTRIBUTE_LABEL 1",
+      "accuracy": 0.0,
+      "total": 2
+    },
+    {
+      "field": "ATTRIBUTE_VALUE 1",
+      "accuracy": 0.0,
+      "total": 2
+    }
+  ]
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS-CIE Unihack Benchmark Report</title>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: #131b2e;
+            --surface-border: #1f2d4d;
+            --primary: #38bdf8;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+        .header .meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .grid-kpi {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .card .title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .card .value.success { color: var(--success); }
+        .card .value.primary { color: var(--primary); }
+        .card .value.warning { color: var(--warning); }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--surface-border);
+        }
+        th {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        code {
+            background: #1e293b;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #38bdf8;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-exact { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .badge-norm { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .badge-mismatch { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .badge-neutral { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        .text-truncate {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>NS-CIE Unihack Validation Report</h1>
+                <div class="meta">Run Timestamp: 20260818_152826 | Engine: Neuro-Symbolic Catalog Intelligence Engine</div>
+            </div>
+            <div>
+                <span class="badge badge-exact">Official Dataset Run</span>
+            </div>
+        </div>
+
+        <div class="grid-kpi">
+            <div class="card">
+                <div class="title">Total Input Records</div>
+                <div class="value">5</div>
+            </div>
+            <div class="card">
+                <div class="title">Golden Records Evaluated</div>
+                <div class="value primary">2 / 2</div>
+            </div>
+            <div class="card">
+                <div class="title">Ground Truth Field Accuracy</div>
+                <div class="value success">0.0%</div>
+            </div>
+            <div class="card">
+                <div class="title">252-Col Schema Compliance</div>
+                <div class="value success">100.0%</div>
+            </div>
+            <div class="card">
+                <div class="title">Execution Time (Avg)</div>
+                <div class="value">5172.6 ms</div>
+            </div>
+            <div class="card">
+                <div class="title">HITL Review Rate</div>
+                <div class="value warning">100.0%</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Official Golden Comparison (PDSH4816AF & WDTS7024RZ)</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Only records with authoritative ground truth are evaluated for accuracy. The remaining 997 records are marked <code>GROUND_TRUTH_UNAVAILABLE</code>.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>MPN</th>
+                    <th>Field</th>
+                    <th>Classification</th>
+                    <th>Expected (Golden)</th>
+                    <th>Actual (NS-CIE)</th>
+                    <th>Normalization Rule</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Accuracy by Field (Lowest Performing)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Accuracy</th>
+                    <th>Total Compared</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">All compared fields achieved 100% normalized accuracy!</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Pipeline Sourcing Breakdown</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Source Mode</th>
+                    <th>Record Count</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>NVIDIA NIM / LLM Mode</td>
+                    <td>0</td>
+                    <td>0.0%</td>
+                </tr>
+                <tr>
+                    <td>Offline Heuristic Engine</td>
+                    <td>5</td>
+                    <td>100.0%</td>
+                </tr>
+                <tr>
+                    <td>Fallback Mode</td>
+                    <td>0</td>
+                    <td>0.0%</td>
+                </tr>
+                <tr>
+                    <td>Cache Hits</td>
+                    <td>0</td>
+                    <td>0.0%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "golden_records_evaluated": 2,
+  "total_fields_compared": 398,
+  "comparable_fields_denominator": 112,
+  "exact_matches": 57,
+  "normalized_matches": 1,
+  "mismatches": 54,
+  "expected_empty": 286,
+  "strict_field_accuracy_pct": 50.89,
+  "normalized_field_accuracy_pct": 51.79,
+  "record_level_accuracy": {
+    "exact_record_matches": 0,
+    "exact_record_match_rate_pct": 0.0,
+    "normalized_record_matches": 0,
+    "normalized_record_match_rate_pct": 0.0,
+    "partial_matches": 2,
+    "complete_mismatches": 0
+  }
+}

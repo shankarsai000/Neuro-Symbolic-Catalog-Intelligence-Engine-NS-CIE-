@@ -1,0 +1,6 @@
+row_index,row_number,mfg_part_num,is_schema_valid,issue_count,issue_types,issue_messages
+0,1,DCB518ASTS06G,True,0,,
+1,2,3MABR-7100075678,True,0,,
+2,3,3MABR-7100045865,True,0,,
+3,4,3MABR-7100048736,True,0,,
+4,5,3MABR-7100075690,True,0,,

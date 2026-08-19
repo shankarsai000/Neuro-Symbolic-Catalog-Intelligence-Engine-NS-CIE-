@@ -1,0 +1,43 @@
+{
+  "path": "D:\\unihack-nscie\\backend\\app\\data\\Unihack_ Sample Dataset - Input.csv",
+  "file_exists": true,
+  "readable": true,
+  "row_count": 1000,
+  "column_count": 6,
+  "columns_found": [
+    "Mfg_Part_Num",
+    "Part_Desc",
+    "E1_Brand",
+    "Unilog_Brand",
+    "DIB_Brand",
+    "Part_Manuf"
+  ],
+  "expected_columns_present": [
+    "Mfg_Part_Num",
+    "Part_Desc",
+    "E1_Brand",
+    "Unilog_Brand",
+    "DIB_Brand",
+    "Part_Manuf"
+  ],
+  "missing_columns": [],
+  "unexpected_columns": [],
+  "duplicate_mpn_count": 1,
+  "duplicate_mpns": [
+    "AVM6EV"
+  ],
+  "missing_mpn_count": 0,
+  "missing_part_desc_count": 0,
+  "missing_manufacturer_count": 0,
+  "row_errors": [
+    {
+      "row_index": 783,
+      "mfg_part_num": "AVM6EV",
+      "field": "Mfg_Part_Num",
+      "error_type": "DUPLICATE_KEY",
+      "message": "Duplicate Mfg_Part_Num: AVM6EV"
+    }
+  ],
+  "is_valid": true,
+  "summary": "Input dataset: 1000 rows, 6 columns. Missing columns: 0. Row errors: 1. Duplicate MPNs: 1."
+}

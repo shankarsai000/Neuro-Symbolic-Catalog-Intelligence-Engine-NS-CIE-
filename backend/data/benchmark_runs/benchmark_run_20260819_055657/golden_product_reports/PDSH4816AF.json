@@ -1,0 +1,1610 @@
+{
+  "mfg_part_num": "PDSH4816AF",
+  "exact_record_match": false,
+  "normalized_record_match": false,
+  "fields_evaluated_count": 199,
+  "exact_matches": 4,
+  "normalized_matches": 0,
+  "mismatches": 47,
+  "expected_empty": 148,
+  "strict_accuracy_pct": 7.84,
+  "normalized_accuracy_pct": 7.84,
+  "source_mode": "OFFLINE_HEURISTIC",
+  "confidence": 0.88,
+  "hitl_required": true,
+  "schema_valid": true,
+  "fields": [
+    {
+      "field_name": "BRAND_NAME",
+      "expected": "FRIGIDAIRE\u00ae",
+      "actual": "FRIGIDAIRE\u00ae",
+      "status": "PASS (EXACT)",
+      "comparison_type": "EXACT_MATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "MANUFACTURER_NAME",
+      "expected": "Rheem Manufacturing",
+      "actual": "Rheem Manufacturing",
+      "status": "PASS (EXACT)",
+      "comparison_type": "EXACT_MATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "MANUFACTURER_PART_NUMBER",
+      "expected": "PDSH4816AF",
+      "actual": "PDSH4816AF",
+      "status": "PASS (EXACT)",
+      "comparison_type": "EXACT_MATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "MOBILE_DESC",
+      "expected": "Rheem Manufacturing FRIGIDAIRE, Dishwasher, Professional Series, PDSH4816AF",
+      "actual": "FRIGIDAIRE\u00ae, Dishwasher, PDSH4816AF - Commercial Grade Dishwasher",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "INVOICE_DESC",
+      "expected": "DISHWASHER LEG 5 SST 120V 15A 50-1/4IN",
+      "actual": "DISHWASHER SST",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "SHORT_DESC",
+      "expected": "FRIGIDAIRE\u00ae Professional Series PDSH4816AF Dishwasher With CleanBoost\u2122, Leg Mounting, 5-Wash Cycle, Stainless Steel",
+      "actual": "FRIGIDAIRE\u00ae, PDSH4816AF, Dishwasher",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "LONG_DESC1",
+      "expected": "FRIGIDAIRE\u00ae Dishwasher With CleanBoost\u2122, Professional Series, 5 Wash Cycles, 120 V, 15 A, Leg Mounting, 24 in W x 24-1/4 in D, 50-1/4 in Depth With Door Open, 8-1/2 in Upper Rack, 11-1/4 in Lower Rack Minimum Height, 10-3/8 in Upper Rack, 13-1/4 in Lower Rack Maximum Height, 47 dBA Sound Level, Stainless Steel, Additional Information: 240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours",
+      "actual": "The FRIGIDAIRE\u00ae PDSH4816AF is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "RETAIL_DESC",
+      "expected": "Professional Series Dishwasher, Leg Mounting, 5-Wash Cycle, Stainless Steel",
+      "actual": "FRIGIDAIRE\u00ae PDSH4816AF Dishwasher in Stainless Steel",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "MARKETING_DESCRIPTION",
+      "expected": "",
+      "actual": "The FRIGIDAIRE\u00ae PDSH4816AF is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Classpath",
+      "expected": "Appliances & Consumer Electronics>Kitchen Appliances>Built-In Dishwashers",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Dept",
+      "expected": "Appliances",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Class",
+      "expected": "Large Appliances",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Fine",
+      "expected": "Dishwashers",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "MFR URL",
+      "expected": "https://www.frigidaire.com/en/p/owner-center/product-support/PDSH4816AF",
+      "actual": "https://www.frigidaire.com/product/PDSH4816AF",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Product Name",
+      "expected": "Dishwasher",
+      "actual": "FRIGIDAIRE\u00ae PDSH4816AF Dishwasher in Stainless Steel",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "With",
+      "expected": "With CleanBoost\u2122",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Standard/Approvals",
+      "expected": "ASSE 1006|CEE Tier 2 Qualified|cUL Listed|ENERGY STAR Certified|NSF Certified|UL Listed",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Warranty",
+      "expected": "1 Year Manufacturer, 1 Year Labor and Parts",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Country Of Origin",
+      "expected": "",
+      "actual": "US",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Discontinued",
+      "expected": "",
+      "actual": "No",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Selling Qty",
+      "expected": "",
+      "actual": "1",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Selling UOM",
+      "expected": "",
+      "actual": "EA",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Product Image",
+      "expected": "FRIGIDAIRE_PDSH4816AF.jpg",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Specification Sheet",
+      "expected": "FRIGIDAIRE_PDSH4816AF_Specification_Sheet.pdf",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "Actual Image (Yes/No)",
+      "expected": "Yes",
+      "actual": "Yes",
+      "status": "PASS (EXACT)",
+      "comparison_type": "EXACT_MATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_1",
+      "expected": "",
+      "actual": "Constructed with high-grade Stainless Steel",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_2",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_3",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_4",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_5",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_6",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_7",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_8",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_9",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_10",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_11",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_12",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_13",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_14",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_15",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_16",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_17",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_18",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_19",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ITEM_FEATURES_20",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 1",
+      "expected": "Series",
+      "actual": "Material",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 1",
+      "expected": "Professional Series",
+      "actual": "Stainless Steel",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 1",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 2",
+      "expected": "Model",
+      "actual": "Item Type",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 2",
+      "expected": "",
+      "actual": "Dishwasher",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 2",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 3",
+      "expected": "Number of Wash Cycles",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 3",
+      "expected": "5",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 3",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 4",
+      "expected": "Voltage Rating",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 4",
+      "expected": "120",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 4",
+      "expected": "V",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 5",
+      "expected": "Amperage Rating",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 5",
+      "expected": "15",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 5",
+      "expected": "A",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 6",
+      "expected": "Mounting Type",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 6",
+      "expected": "Leg",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 6",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 7",
+      "expected": "Plug Type",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 7",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 7",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 8",
+      "expected": "Size",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 8",
+      "expected": "24 in W x 24-1/4 in D",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 8",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 9",
+      "expected": "Depth With Door Open",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 9",
+      "expected": "50-1/4",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 9",
+      "expected": "in",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 10",
+      "expected": "Minimum Height",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 10",
+      "expected": "8-1/2 in Upper Rack, 11-1/4 in Lower Rack",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 10",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 11",
+      "expected": "Maximum Height",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 11",
+      "expected": "10-3/8 in Upper Rack, 13-1/4 in Lower Rack",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 11",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 12",
+      "expected": "Sound Level",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 12",
+      "expected": "47",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 12",
+      "expected": "dBA",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 13",
+      "expected": "Material",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 13",
+      "expected": "Stainless Steel",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 13",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 14",
+      "expected": "Color",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 14",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 14",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 15",
+      "expected": "Additional Information",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 15",
+      "expected": "240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours",
+      "actual": "",
+      "status": "FAIL (MISMATCH)",
+      "comparison_type": "MISMATCH",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 15",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 16",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 16",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 16",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 17",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 17",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 17",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 18",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 18",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 18",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 19",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 19",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 19",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 20",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 20",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 20",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 21",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 21",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 21",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 22",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 22",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 22",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 23",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 23",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 23",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 24",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 24",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 24",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 25",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 25",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 25",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 26",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 26",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 26",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 27",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 27",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 27",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 28",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 28",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 28",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 29",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 29",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 29",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 30",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 30",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 30",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 31",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 31",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 31",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 32",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 32",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 32",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 33",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 33",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 33",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 34",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 34",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 34",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 35",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 35",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 35",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 36",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 36",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 36",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 37",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 37",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 37",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 38",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 38",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 38",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 39",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 39",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 39",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 40",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 40",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 40",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 41",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 41",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 41",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 42",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 42",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 42",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 43",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 43",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 43",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 44",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 44",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 44",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 45",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 45",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 45",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 46",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 46",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 46",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 47",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 47",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 47",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 48",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 48",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 48",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 49",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 49",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 49",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_LABEL 50",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_VALUE 50",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "ATTRIBUTE_UOM 50",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "UPC",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "EAN",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "GTIN",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    },
+    {
+      "field_name": "UNSPSC",
+      "expected": "",
+      "actual": "",
+      "status": "EXPECTED_EMPTY",
+      "comparison_type": "EXPECTED_EMPTY",
+      "normalization_rule": ""
+    }
+  ]
+}

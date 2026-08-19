@@ -31,9 +31,36 @@ class Settings(BaseSettings):
         default=os.getenv("NVIDIA_MODEL", os.getenv("LLM_MODEL_NAME", "nvidia/nemotron-3.5-lightning-30b-a3b")),
         description="NVIDIA NIM Model Name",
     )
-    nvidia_timeout_sec: float = Field(default=5.0, description="HTTP timeout for NIM inference requests")
-    nvidia_max_retries: int = Field(default=2, description="Maximum retries for NIM API errors")
+    nvidia_timeout_sec: float = Field(default=float(os.getenv("NIM_REQUEST_TIMEOUT", "8.0")), description="HTTP timeout for NIM inference requests")
+    nvidia_max_retries: int = Field(default=int(os.getenv("NIM_MAX_RETRIES", "3")), description="Maximum retries for NIM API errors")
+    nim_max_concurrency: int = Field(default=int(os.getenv("NIM_MAX_CONCURRENCY", "2")), description="Maximum parallel in-flight NIM requests")
+    nim_backoff_base: float = Field(default=float(os.getenv("NIM_BACKOFF_BASE", "1.0")), description="Base backoff delay in seconds")
+    nim_backoff_max: float = Field(default=float(os.getenv("NIM_BACKOFF_MAX", "8.0")), description="Maximum backoff delay in seconds")
+    nim_rate_limit_rpm: int = Field(default=int(os.getenv("NIM_RATE_LIMIT_RPM", "40")), description="Max NIM requests per minute")
     require_live_nim: bool = Field(default=False, description="Enforce hard failure if live NIM is unavailable in production")
+    # Security Configuration
+    secret_key: str = Field(default=os.getenv("SECRET_KEY", "nscie_default_secret_key_change_in_production"), description="Application secret key")
+    allowed_cors_origins: str = Field(
+        default=os.getenv("ALLOWED_CORS_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"),
+        description="Comma-separated allowed CORS origins",
+    )
+    max_request_size_mb: int = Field(default=50, description="Max allowed request payload size in MB")
+    rate_limit_per_minute: int = Field(default=120, description="Rate limit requests per minute per IP")
+    enable_strict_ssrf_protection: bool = Field(default=True, description="Strict DNS resolution and IP filtering for SSRF")
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        default_local = [
+            "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003", "http://localhost:3004", "http://localhost:3005", "http://localhost:5173", "http://localhost:8888",
+            "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3002", "http://127.0.0.1:3003", "http://127.0.0.1:3004", "http://127.0.0.1:5173", "http://127.0.0.1:8888",
+        ]
+        if not self.allowed_cors_origins:
+            return default_local
+        origins = [o.strip() for o in self.allowed_cors_origins.split(",") if o.strip()]
+        for loc in default_local:
+            if loc not in origins:
+                origins.append(loc)
+        return origins
 
     # Backward-compatible property aliases
     @property

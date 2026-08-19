@@ -1,0 +1,22 @@
+{
+  "total_input_records": 5,
+  "total_processed": 0,
+  "total_failed": 5,
+  "total_schema_valid": 0,
+  "total_schema_invalid": 5,
+  "ground_truth_available": 0,
+  "ground_truth_unavailable": 5,
+  "nim_count": 0,
+  "fallback_count": 0,
+  "cache_hit_count": 0,
+  "heuristic_count": 5,
+  "avg_latency_ms": 4881.426699995063,
+  "p50_latency_ms": 2074.98089998262,
+  "p95_latency_ms": 14966.692899994086,
+  "p99_latency_ms": 14966.692899994086,
+  "min_latency_ms": 1770.9079000051133,
+  "max_latency_ms": 14966.692899994086,
+  "total_time_seconds": 15.145050799997989,
+  "hitl_required_count": 5,
+  "hitl_rate": 1.0
+}

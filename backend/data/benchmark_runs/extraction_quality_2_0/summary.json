@@ -1,0 +1,35 @@
+{
+  "strict_field_accuracy_pct": 89.29,
+  "normalized_field_accuracy_pct": 91.07,
+  "total_compared_fields": 398,
+  "exact_matches": 100,
+  "normalized_matches": 2,
+  "mismatches": 10,
+  "expected_empty": 286,
+  "attribute_metrics": {
+    "PDSH4816AF": {
+      "expected_attributes": 51,
+      "actual_attributes": 71,
+      "correct_attributes": 46,
+      "missing_attributes": 5,
+      "extra_attributes": 20,
+      "incorrect_attributes": 5,
+      "precision_pct": 64.79,
+      "recall_completeness_pct": 90.2,
+      "f1_score_pct": 75.41
+    },
+    "WDTS7024RZ": {
+      "expected_attributes": 61,
+      "actual_attributes": 81,
+      "correct_attributes": 56,
+      "missing_attributes": 5,
+      "extra_attributes": 20,
+      "incorrect_attributes": 5,
+      "precision_pct": 69.14,
+      "recall_completeness_pct": 91.8,
+      "f1_score_pct": 78.87
+    }
+  },
+  "product_reports_dir": "data\\benchmark_runs\\extraction_quality_2_0\\golden_product_reports",
+  "comparison_file": "data\\benchmark_runs\\extraction_quality_2_0\\golden_comparison.csv"
+}

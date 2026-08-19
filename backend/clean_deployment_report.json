@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-08-18T13:59:54.268122+00:00",
+  "phase": "PHASE_19_CLEAN_MACHINE_DEPLOYMENT_VERIFICATION",
+  "status": "PASSED",
+  "docker_environment": {
+    "docker_available": true,
+    "docker_compose_available": true,
+    "containers_running": 0,
+    "services": {},
+    "docker_version": "Docker version 29.2.1, build a5c7197",
+    "docker_compose_version": "Docker Compose version v5.1.0"
+  },
+  "services_verified": [
+    "postgres",
+    "redis",
+    "backend",
+    "worker",
+    "frontend",
+    "nginx"
+  ],
+  "execution_time_seconds": 111.31,
+  "records_queued": 1000,
+  "schema_compliance": true,
+  "benchmark_metrics": {
+    "exact_match_accuracy": 0.2,
+    "field_level_accuracy": 1.0,
+    "category_accuracy": 1.0,
+    "brand_accuracy": 1.0,
+    "mpn_accuracy": 1.0,
+    "attribute_accuracy": 1.0,
+    "invoice_description_compliance": 1.0,
+    "uom_compliance": 1.0,
+    "fraction_compliance": 1.0,
+    "schema_compliance": 1.0
+  }
+}

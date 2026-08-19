@@ -1,0 +1,30 @@
+{
+  "total_records_checked": 1000,
+  "schema_pass_count": 997,
+  "schema_fail_count": 3,
+  "schema_pass_rate_pct": 99.7,
+  "exact_column_count_expected": 252,
+  "failure_samples": [
+    {
+      "mfg_part_num": "DBDS12125G01F",
+      "row_number": 14,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 4] Glued UOM detected in ATTRIBUTE_VALUE 4: '20mm'"
+    },
+    {
+      "mfg_part_num": "DBDS14125G01F",
+      "row_number": 16,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 4] Glued UOM detected in ATTRIBUTE_VALUE 4: '20mm'"
+    },
+    {
+      "mfg_part_num": "DCM200B",
+      "row_number": 882,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 2] Glued UOM detected in ATTRIBUTE_VALUE 2: '18in'"
+    }
+  ]
+}

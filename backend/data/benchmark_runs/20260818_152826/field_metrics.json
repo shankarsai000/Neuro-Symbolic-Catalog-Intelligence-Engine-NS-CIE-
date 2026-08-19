@@ -1,0 +1,12 @@
+{
+  "total_golden_records": 0,
+  "total_fields_compared": 0,
+  "exact_match_count": 0,
+  "normalized_match_count": 0,
+  "mismatch_count": 0,
+  "expected_empty_count": 0,
+  "field_accuracy": 0.0,
+  "record_accuracy": 0.0,
+  "per_field_accuracy": {},
+  "worst_fields": []
+}

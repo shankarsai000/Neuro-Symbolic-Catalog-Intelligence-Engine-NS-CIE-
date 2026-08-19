@@ -1,0 +1,2 @@
+row_index,mfg_part_num,field,error_type,message
+783,AVM6EV,Mfg_Part_Num,DUPLICATE_KEY,Duplicate Mfg_Part_Num: AVM6EV

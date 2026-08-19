@@ -117,7 +117,7 @@ def _extract_heuristic_fallback(
 
     # 2. Dimensions pattern: require dimensional unit (in, ", ', ft, mm, cm) OR multi-dimension (x)
     dim_match = re.search(
-        r"\b(\d+(?:[-/]\d+)?(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?|\"|\'|ft|mm|cm)(?:\s*[xX]\s*\d+(?:[-/]\d+)?(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?|\"|\'|ft|mm|cm)?)*)\b",
+        r"\b((?:\d+[- ])?\d+(?:/\d+)?(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?|\"|\'|ft|mm|cm)(?:\s*[xX]\s*(?:\d+[- ])?\d+(?:/\d+)?(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?|\"|\'|ft|mm|cm)?)*)\b",
         text,
         re.IGNORECASE,
     )
@@ -314,10 +314,30 @@ class StructuredExtractor:
         manufacturer: Optional[str] = None,
         category: Optional[str] = None,
         allowed_lovs: Optional[list[str]] = None,
-        manufacturer_evidence: Optional[str] = None,
+        manufacturer_evidence: Optional[Any] = None,
         mpn: Optional[str] = None,
     ) -> tuple[ExtractedAttributes, str]:
-        """Extract structured attributes using live NVIDIA NIM when configured, with explicit fallback."""
+        """Extract structured attributes using Evidence-First architecture."""
+        from app.core.technical_extractor import technical_spec_extractor
+
+        # Step 1: Run Evidence-First Deterministic Spec Extractor
+        evidence_dict = manufacturer_evidence if isinstance(manufacturer_evidence, dict) else (
+            manufacturer_evidence.to_dict() if hasattr(manufacturer_evidence, "to_dict") else {}
+        )
+        tech_specs = technical_spec_extractor.extract_specs(
+            raw_desc=raw_desc,
+            category=category,
+            manufacturer_evidence=evidence_dict,
+            mpn=mpn,
+            brand=manufacturer,
+        )
+
+        ev_text = ""
+        if isinstance(manufacturer_evidence, str):
+            ev_text = manufacturer_evidence
+        elif isinstance(evidence_dict, dict) and evidence_dict.get("extracted_text"):
+            ev_text = evidence_dict["extracted_text"]
+
         if self.client.is_configured():
             try:
                 messages = _build_extraction_prompt(
@@ -325,21 +345,49 @@ class StructuredExtractor:
                     manufacturer=manufacturer,
                     category=category,
                     allowed_lovs=allowed_lovs,
-                    manufacturer_evidence=manufacturer_evidence,
+                    manufacturer_evidence=ev_text,
                     mpn=mpn,
                 )
 
                 content, _ = self.client.generate_chat_completion(
                     messages=messages,
                     temperature=0.0,
-                    max_tokens=600,
+                    max_tokens=1024,
                 )
 
                 # Strip markdown code fences if present (e.g. ```json ... ```)
-                cleaned = re.sub(r"^```(?:json)?\s*", "", content.strip(), flags=re.MULTILINE)
-                cleaned = re.sub(r"```$", "", cleaned.strip(), flags=re.MULTILINE)
+                json_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", content)
+                if json_match:
+                    json_str = json_match.group(1)
+                else:
+                    json_match2 = re.search(r"(\{[\s\S]*\})", content)
+                    json_str = json_match2.group(1) if json_match2 else content.strip()
 
-                parsed_data = json.loads(cleaned)
+                parsed_data = json.loads(json_str)
+
+                # Evidence-First Priority: Preserved deterministic manufacturer evidence values take precedence
+                if tech_specs.get("brand"):
+                    parsed_data["brand"] = tech_specs["brand"]
+                if tech_specs.get("mpn"):
+                    parsed_data["mpn"] = tech_specs["mpn"]
+                if tech_specs.get("voltage"):
+                    parsed_data["voltage"] = tech_specs["voltage"]
+                if tech_specs.get("amperage"):
+                    parsed_data["amperage"] = tech_specs["amperage"]
+                if tech_specs.get("dimensions"):
+                    parsed_data["dimensions"] = tech_specs["dimensions"]
+                if tech_specs.get("mounting"):
+                    parsed_data["mounting"] = tech_specs["mounting"]
+                if tech_specs.get("material"):
+                    parsed_data["material"] = tech_specs["material"]
+                if tech_specs.get("item_type"):
+                    parsed_data["item_type"] = tech_specs["item_type"]
+
+                raw_specs = parsed_data.get("raw_specs", {})
+                if tech_specs.get("raw_specs"):
+                    raw_specs.update(tech_specs["raw_specs"])
+                parsed_data["raw_specs"] = raw_specs
+
                 extracted = ExtractedAttributes(**parsed_data)
                 return extracted, "LIVE_NIM"
 
@@ -348,9 +396,33 @@ class StructuredExtractor:
                 if settings.require_live_nim:
                     raise RuntimeError(f"Live NVIDIA NIM required but failed: {e}")
 
-        # Deterministic offline heuristic fallback with category awareness
+        # Deterministic offline heuristic fallback with evidence integration
         fallback = _extract_heuristic_fallback(raw_desc, manufacturer, mpn, category)
-        return fallback, "OFFLINE_HEURISTIC"
+
+        # Priority 1: Merge verified technical specs into fallback
+        res_brand = tech_specs.get("brand") or fallback.brand or manufacturer
+        res_mpn = tech_specs.get("mpn") or fallback.mpn or mpn
+        res_type = tech_specs.get("item_type") or fallback.item_type
+        res_volt = tech_specs.get("voltage") or fallback.voltage
+        res_dim = tech_specs.get("dimensions") or fallback.dimensions
+        res_moun = tech_specs.get("mounting") or fallback.mounting
+        res_mat = tech_specs.get("material") or fallback.material
+
+        merged_raw_specs = dict(fallback.raw_specs or {})
+        if tech_specs.get("raw_specs"):
+            merged_raw_specs.update(tech_specs["raw_specs"])
+
+        res_attributes = ExtractedAttributes(
+            brand=res_brand,
+            item_type=res_type,
+            mpn=res_mpn,
+            voltage=res_volt,
+            dimensions=res_dim,
+            mounting=res_moun,
+            material=res_mat,
+            raw_specs=merged_raw_specs,
+        )
+        return res_attributes, "OFFLINE_HEURISTIC"
 
 
 structured_extractor = StructuredExtractor()

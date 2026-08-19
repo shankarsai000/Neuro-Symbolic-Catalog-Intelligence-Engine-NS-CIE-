@@ -249,6 +249,8 @@ const SAMPLE_PRESETS = [
   },
 ];
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
 export default function Dashboard() {
   const [activeScreen, setActiveScreen] = useState<
     | "dashboard"
@@ -297,7 +299,7 @@ export default function Dashboard() {
   // 1. Fetch System Metrics & Reviews
   const fetchMetrics = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/system/metrics");
+      const res = await fetch(`${API_BASE}/api/system/metrics`);
       if (res.ok) {
         const data = await res.json();
         setMetrics(data);
@@ -314,7 +316,7 @@ export default function Dashboard() {
 
   const fetchReviews = useCallback(async () => {
     try {
-      const url = reviewFilter ? `http://localhost:8000/api/reviews?status=${reviewFilter}` : "http://localhost:8000/api/reviews";
+      const url = reviewFilter ? `${API_BASE}/api/reviews?status=${reviewFilter}` : `${API_BASE}/api/reviews`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -335,7 +337,7 @@ export default function Dashboard() {
     if (activeBatchId) {
       const poll = async () => {
         try {
-          const res = await fetch(`http://localhost:8000/api/batches/${activeBatchId}/progress`);
+          const res = await fetch(`${API_BASE}/api/batches/${activeBatchId}/progress`);
           if (res.ok) {
             const data = await res.json();
             setBatchProgress(data);
@@ -359,7 +361,7 @@ export default function Dashboard() {
     let ignore = false;
     const loadInitialData = async () => {
       try {
-        const mRes = await fetch("http://localhost:8000/api/system/metrics");
+        const mRes = await fetch(`${API_BASE}/api/system/metrics`);
         if (mRes.ok && !ignore) {
           const mData = await mRes.json();
           setMetrics(mData);
@@ -373,7 +375,7 @@ export default function Dashboard() {
       }
 
       try {
-        const url = reviewFilter ? `http://localhost:8000/api/reviews?status=${reviewFilter}` : "http://localhost:8000/api/reviews";
+        const url = reviewFilter ? `${API_BASE}/api/reviews?status=${reviewFilter}` : `${API_BASE}/api/reviews`;
         const rRes = await fetch(url);
         if (rRes.ok && !ignore) {
           const rData = await rRes.json();
@@ -395,7 +397,7 @@ export default function Dashboard() {
     setIsEnriching(true);
     setApiError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/enrich-single", {
+      const res = await fetch(`${API_BASE}/api/enrich-single`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -428,12 +430,15 @@ export default function Dashboard() {
     setApiError(null);
     try {
       // 1. Create Batch Job
-      const createRes = await fetch("http://localhost:8000/api/batches", {
+      const createRes = await fetch(`${API_BASE}/api/batches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: batchName, filename: batchFile.name }),
       });
-      if (!createRes.ok) throw new Error("Failed to create batch job");
+      if (!createRes.ok) {
+        const errJson = await createRes.json().catch(() => ({}));
+        throw new Error(errJson.detail || "Failed to create batch job");
+      }
       const createData = await createRes.json();
       const batchId = createData.batch_id;
       setActiveBatchId(batchId);
@@ -442,11 +447,14 @@ export default function Dashboard() {
       const formData = new FormData();
       formData.append("file", batchFile);
 
-      const uploadRes = await fetch(`http://localhost:8000/api/batches/${batchId}/upload`, {
+      const uploadRes = await fetch(`${API_BASE}/api/batches/${batchId}/upload`, {
         method: "POST",
         body: formData,
       });
-      if (!uploadRes.ok) throw new Error("Failed to upload batch dataset");
+      if (!uploadRes.ok) {
+        const errJson = await uploadRes.json().catch(() => ({}));
+        throw new Error(errJson.detail || errJson.message || "Failed to upload batch dataset");
+      }
 
       setActiveScreen("batch-progress");
     } catch (err: unknown) {
@@ -462,7 +470,7 @@ export default function Dashboard() {
     setIsRunningBenchmark(true);
     setApiError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/benchmark/run", {
+      const res = await fetch(`${API_BASE}/api/benchmark/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -485,7 +493,7 @@ export default function Dashboard() {
   // HITL Action Handlers
   const handleApproveReview = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/reviews/${id}/approve`, {
+      const res = await fetch(`${API_BASE}/api/reviews/${id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: "Verified and approved by catalog auditor." }),
@@ -499,7 +507,7 @@ export default function Dashboard() {
 
   const handleRejectReview = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/reviews/${id}/reject`, {
+      const res = await fetch(`${API_BASE}/api/reviews/${id}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: "Rejected due to invalid specifications." }),
@@ -514,11 +522,11 @@ export default function Dashboard() {
   const handleEditReview = async (id: number) => {
     if (!editValue) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/reviews/${id}/edit`, {
+      const res = await fetch(`${API_BASE}/api/reviews/${id}/edit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ new_value: editValue, user_notes: "Manual override by catalog engineer." }),
-      });
+      });;
       if (res.ok) {
         setEditingReviewId(null);
         setEditValue("");
@@ -811,7 +819,7 @@ export default function Dashboard() {
               <RefreshCw className="w-4 h-4" />
             </button>
             <a
-              href="http://localhost:8000/docs"
+              href={`${API_BASE}/docs`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white transition-colors"
@@ -1150,7 +1158,7 @@ export default function Dashboard() {
                     {activeBatchId && (
                       <div className="pt-2 flex justify-end">
                         <a
-                          href={`http://localhost:8000/api/batches/${activeBatchId}/download`}
+                          href={`${API_BASE}/api/batches/${activeBatchId}/download`}
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition-all"
                         >
                           <Download className="w-4 h-4" />
@@ -1769,7 +1777,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <a
-                      href="http://localhost:8000/api/export-sample"
+                      href={`${API_BASE}/api/export-sample`}
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition-all"
                     >
                       <Download className="w-4 h-4" />
@@ -1786,7 +1794,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <a
-                        href={`http://localhost:8000/api/batches/${activeBatchId}/download`}
+                        href={`${API_BASE}/api/batches/${activeBatchId}/download`}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition-all"
                       >
                         <Download className="w-4 h-4" />

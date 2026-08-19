@@ -40,6 +40,7 @@ from app.ai.nvidia_client import model_health_check
 
 
 from app.core.observability import evaluate_system_health, telemetry_collector
+from app.core.security import validate_uploaded_file_security
 
 
 class ComponentHealth(BaseModel):
@@ -121,7 +122,7 @@ async def system_metrics(db: AsyncSession = Depends(get_db)) -> SystemMetricsRes
     """Return real-time telemetry metrics, latencies, cache rates, and system status."""
     db_status = "connected"
     try:
-        await db.execute(select(Product).limit(1))
+        await asyncio.wait_for(db.execute(select(Product).limit(1)), timeout=1.0)
     except Exception:
         db_status = "local_sqlite_fallback"
 
@@ -268,16 +269,12 @@ async def upload_batch_file(
         raise HTTPException(status_code=404, detail="Batch job not found")
 
     filename = file.filename or "uploaded.csv"
-    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file extension '{ext}'. Only CSV and Excel (.xlsx, .xls) files are supported.",
-        )
-
     content = await file.read()
-    if len(content) > MAX_UPLOAD_SIZE_BYTES:
-        raise HTTPException(status_code=413, detail="File size exceeds maximum 50 MB upload limit")
+
+    # Security validation (extension, payload limit, magic bytes, script/executable injection)
+    validate_uploaded_file_security(filename, content, file.content_type or "")
+
+    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
     # Parse uploaded file with multi-encoding resilience
     items: list[EnrichmentRequest] = []

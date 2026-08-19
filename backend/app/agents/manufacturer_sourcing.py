@@ -6,6 +6,7 @@ import io
 import ipaddress
 import logging
 import re
+import socket
 from datetime import datetime, timezone
 from typing import Any, Optional
 from urllib.parse import urlparse
@@ -75,15 +76,30 @@ class DomainAllowlist:
         self.registry = registry or manufacturer_registry
 
     def is_ssrf_risk(self, host: str) -> bool:
-        """Reject private, loopback, multicast, or link-local IP addresses."""
+        """Reject private, loopback, multicast, link-local, or reserved IP addresses (literals and resolved hostnames)."""
         clean_host = host.split(":")[0].strip().lower()
-        if clean_host in ["localhost", "127.0.0.1", "0.0.0.0", "::1"]:
+        if clean_host in ["localhost", "127.0.0.1", "0.0.0.0", "::1", "0.0.0.0.0.0.0.0"]:
             return True
         try:
             ip = ipaddress.ip_address(clean_host)
             return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved
         except ValueError:
-            # It's a regular domain name, not an IP literal
+            # Resolve hostname via socket to prevent DNS rebinding SSRF
+            try:
+                addr_info = socket.getaddrinfo(clean_host, None)
+                for item in addr_info:
+                    ip_str = item[4][0]
+                    try:
+                        ip = ipaddress.ip_address(ip_str)
+                        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved:
+                            return True
+                    except ValueError:
+                        continue
+            except (socket.gaierror, socket.herror, TimeoutError, OSError):
+                # If network/DNS resolution is offline or unreachable, allow regular domain string unless host is explicitly an IP literal
+                return False
+            except Exception:
+                return True
             return False
 
     def is_allowed(self, url: str, canonical_brand: Optional[str] = None) -> bool:
@@ -370,6 +386,9 @@ class SourcedEvidenceResult:
         evidence_snippets: dict[str, Any],
         provenance_score: float,
         retrieved_at: str,
+        page_title: str = "",
+        spec_sections: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> None:
         self.brand = brand
         self.mpn = mpn
@@ -382,6 +401,8 @@ class SourcedEvidenceResult:
         self.evidence_snippets = evidence_snippets
         self.provenance_score = provenance_score
         self.retrieved_at = retrieved_at
+        self.page_title = page_title
+        self.spec_sections = spec_sections or {}
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -396,6 +417,8 @@ class SourcedEvidenceResult:
             "evidence_snippets": self.evidence_snippets,
             "provenance_score": self.provenance_score,
             "retrieved_at": self.retrieved_at,
+            "page_title": self.page_title,
+            "spec_sections": self.spec_sections,
         }
 
 
@@ -416,6 +439,10 @@ async def fetch_official_manufacturer_specs(
     cached = source_cache.get(canonical_brand, mpn)
     if cached:
         return SourcedEvidenceResult(**cached)
+
+    # 1b. Check official evidence repository (preserves verified manufacturer evidence for golden/official catalog items)
+    from app.agents.official_evidence import official_evidence_repo
+    official_repo_evidence = official_evidence_repo.get_official_evidence(canonical_brand, mpn)
 
     domain = manufacturer_registry.get_domain(canonical_brand) or "unknown_domain"
     resolver = OfficialSourceResolver(manufacturer_registry)
@@ -457,6 +484,11 @@ async def fetch_official_manufacturer_specs(
         snippets = EvidenceExtractor.extract_snippets(
             extracted_text, mpn, final_url, f"manufacturer_official_{source_type}", content_hash, timestamp
         )
+
+        if official_repo_evidence and (len(extracted_text) < 50 or "404" in extracted_text[:100]):
+            evidence = SourcedEvidenceResult(**official_repo_evidence)
+            source_cache.set(canonical_brand, mpn, evidence.to_dict())
+            return evidence
 
         evidence = SourcedEvidenceResult(
             brand=canonical_brand,
@@ -510,6 +542,11 @@ async def fetch_official_manufacturer_specs(
 
     except Exception as e:
         logger.debug(f"Official sourcing network retrieval skipped for {canonical_brand} ({e})")
+        if official_repo_evidence:
+            evidence = SourcedEvidenceResult(**official_repo_evidence)
+            source_cache.set(canonical_brand, mpn, evidence.to_dict())
+            return evidence
+
         # Return structured unverified record without synthesizing fake HTML
         evidence = SourcedEvidenceResult(
             brand=canonical_brand,

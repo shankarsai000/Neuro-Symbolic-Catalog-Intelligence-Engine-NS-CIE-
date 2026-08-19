@@ -1,0 +1,76 @@
+{
+  "input_profile": {
+    "file_path": "D:\\unihack-nscie\\backend\\data\\2 datasets\\Unihack_ Sample Dataset - Input.csv",
+    "file_size_bytes": 128673,
+    "sha256": "ed41b50e26c83d0859d563028107fa81a799b5b4b9e3d5743eb846dbd3c7b862",
+    "total_records": 1000,
+    "total_columns": 6,
+    "column_names": [
+      "Mfg_Part_Num",
+      "Part_Desc",
+      "E1_Brand",
+      "Unilog_Brand",
+      "DIB_Brand",
+      "Part_Manuf"
+    ],
+    "mfg_part_num": {
+      "present": 1000,
+      "missing": 0,
+      "completeness_pct": 100.0,
+      "duplicate_count": 1
+    },
+    "part_desc": {
+      "present": 1000,
+      "missing": 0,
+      "completeness_pct": 100.0
+    },
+    "part_manuf": {
+      "present": 1000,
+      "missing": 0,
+      "completeness_pct": 100.0
+    },
+    "brand_placeholders": {
+      "E1_Brand": 803,
+      "Unilog_Brand": 1000,
+      "DIB_Brand": 755
+    },
+    "records_with_ref_urls": 0,
+    "records_with_ref_urls_pct": 0.0,
+    "records_with_mfr_urls": 0,
+    "records_with_mfr_urls_pct": 0.0,
+    "records_with_attribute_labels": 0,
+    "records_with_attribute_values": 0,
+    "records_with_attribute_uoms": 0
+  },
+  "golden_profile": {
+    "file_path": "D:\\unihack-nscie\\backend\\data\\2 datasets\\Unihack_ Expected Output - Delivery Format.csv",
+    "file_size_bytes": 8695,
+    "sha256": "3304b26f4c3fc3cd5d51b32161cf1900c26e6a7fe238578e53f6f7132df7c580",
+    "golden_record_count": 2,
+    "golden_column_count": 252,
+    "is_252_column_compliant": true,
+    "duplicate_mfg_part_num": 0,
+    "golden_mpns": [
+      "PDSH4816AF",
+      "WDTS7024RZ"
+    ],
+    "total_input_records": 1000,
+    "golden_reference_records": 2,
+    "records_without_ground_truth": 997,
+    "ground_truth_coverage_pct": 0.2,
+    "populated_field_distribution": [
+      {
+        "mfg_part_num": "PDSH4816AF",
+        "populated_fields": 63,
+        "total_fields": 252,
+        "density_pct": 25.0
+      },
+      {
+        "mfg_part_num": "WDTS7024RZ",
+        "populated_fields": 71,
+        "total_fields": 252,
+        "density_pct": 28.17
+      }
+    ]
+  }
+}

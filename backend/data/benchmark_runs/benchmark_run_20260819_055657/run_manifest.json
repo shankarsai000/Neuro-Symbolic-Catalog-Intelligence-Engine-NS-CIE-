@@ -1,0 +1,16 @@
+{
+  "run_id": "unihack_20260819_055657",
+  "timestamp": "20260819_055657",
+  "git_commit": "b9c8b3b3a64f2c77c6c7205161d6ca571f1ed46d",
+  "input_dataset_path": "D:\\unihack-nscie\\backend\\data\\2 datasets\\Unihack_ Sample Dataset - Input.csv",
+  "input_dataset_hash": "ed41b50e26c83d0859d563028107fa81a799b5b4b9e3d5743eb846dbd3c7b862",
+  "expected_dataset_path": "D:\\unihack-nscie\\backend\\data\\2 datasets\\Unihack_ Expected Output - Delivery Format.csv",
+  "expected_dataset_hash": "3304b26f4c3fc3cd5d51b32161cf1900c26e6a7fe238578e53f6f7132df7c580",
+  "input_row_count": 1000,
+  "golden_row_count": 2,
+  "configured_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "actual_model": "NVIDIA NIM / Nemotron (fallback active on 429)",
+  "source_mode": "Production Hybrid (Live NIM with Offline Heuristic Fallback)",
+  "configuration_version": "2.0.0",
+  "software_version": "NS-CIE v2.0-Unihack"
+}

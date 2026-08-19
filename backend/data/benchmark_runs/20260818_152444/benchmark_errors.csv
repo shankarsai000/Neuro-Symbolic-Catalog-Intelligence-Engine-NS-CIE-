@@ -1,0 +1,6 @@
+mfg_part_num,category,message
+DCB518ASTS06G,PIPELINE_EXECUTION_FAILURE,'EnrichmentResponse' object has no attribute 'review_required'
+3MABR-7100075678,PIPELINE_EXECUTION_FAILURE,'EnrichmentResponse' object has no attribute 'review_required'
+3MABR-7100045865,PIPELINE_EXECUTION_FAILURE,'EnrichmentResponse' object has no attribute 'review_required'
+3MABR-7100048736,PIPELINE_EXECUTION_FAILURE,'EnrichmentResponse' object has no attribute 'review_required'
+3MABR-7100075690,PIPELINE_EXECUTION_FAILURE,'EnrichmentResponse' object has no attribute 'review_required'

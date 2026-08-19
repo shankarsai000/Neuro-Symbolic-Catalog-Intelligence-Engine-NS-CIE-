@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS-CIE — Unihack Production Performance Report</title>
+    <style>
+        :root {
+            --bg: #090d16;
+            --surface: #111827;
+            --surface-elevated: #1f2937;
+            --border: #374151;
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.15);
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2.5rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.2rem;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .grid-kpi {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        .card-header {
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card .title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .card .value.success { color: var(--success); }
+        .card .value.primary { color: var(--primary); }
+        .card .value.warning { color: var(--warning); }
+        .card .sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        .section-title {
+            font-size: 1.4rem;
+            margin-top: 3rem;
+            margin-bottom: 1.25rem;
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+            color: var(--text-main);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        th, td {
+            padding: 0.85rem 1.1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background-color: var(--surface-elevated);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        code {
+            background: #1e293b;
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #38bdf8;
+            font-size: 0.85em;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-exact { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge-norm { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-mismatch { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+        .badge-neutral { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
+        .text-truncate {
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .readiness-banner {
+            padding: 1.25rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>NS-CIE — Unihack Production Performance Report</h1>
+                <div class="subtitle">Official Benchmark Evaluation on 1,000 Supplier Catalog Records & Golden Reference</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="badge badge-exact" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Evaluation Run: 20260819_055657</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">Commit: <code>b9c8b3b3</code></div>
+            </div>
+        </div>
+
+        <div class="readiness-banner">
+            <div>
+                <strong style="font-size: 1.1rem; color: var(--text-main);">Overall System Readiness:</strong>
+                <span style="margin-left: 0.5rem;" class="badge badge-norm">NOT_READY</span>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;">System fails to meet minimum required ground truth accuracy or schema quality thresholds.</div>
+            </div>
+        </div>
+
+        <!-- Section 1: Executive KPI Grid -->
+        <div class="grid-kpi">
+            <div class="card">
+                <div class="title">1. Total Ingestion</div>
+                <div class="value primary">1000</div>
+                <div class="sub">Success Rate: <strong>100.0%</strong></div>
+            </div>
+            <div class="card">
+                <div class="title">2. 252-Col Delivery Pass</div>
+                <div class="value success">998 / 1000</div>
+                <div class="sub">Compliance: <strong>99.8%</strong></div>
+            </div>
+            <div class="card">
+                <div class="title">3. Golden Reference Evaluated</div>
+                <div class="value primary">2 records</div>
+                <div class="sub">Coverage: 0.2% (998 unavail)</div>
+            </div>
+            <div class="card">
+                <div class="title">4. Ground Truth Strict Acc</div>
+                <div class="value success">6.25%</div>
+                <div class="sub">Normalized Acc: <strong>7.14%</strong></div>
+            </div>
+            <div class="card">
+                <div class="title">5. Average Processing Latency</div>
+                <div class="value">12857.3 ms</div>
+                <div class="sub">P50: 11247.6 ms | P95: 34506.3 ms</div>
+            </div>
+            <div class="card">
+                <div class="title">6. HITL Review Rate</div>
+                <div class="value warning">97.4%</div>
+                <div class="sub">Auto-Approved: 26 items</div>
+            </div>
+        </div>
+
+        <!-- Section 2: Readiness Assessment Table -->
+        <h2 class="section-title">Production Readiness Assessment (Part 18)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Evaluation Criterion</th>
+                    <th>Required Threshold</th>
+                    <th>Measured Value</th>
+                    <th>Status</th>
+                    <th>Technical Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td><strong>INPUT_PROCESSING</strong></td>
+            <td>>= 99.0%</td>
+            <td>100.0%</td>
+            <td><span class="badge badge-exact">PASS</span></td>
+            <td><small>Reliably completed processing across input dataset</small></td>
+        </tr>
+        
+        <tr>
+            <td><strong>SCHEMA_COMPLIANCE</strong></td>
+            <td>>= 99.0%</td>
+            <td>99.8%</td>
+            <td><span class="badge badge-exact">PASS</span></td>
+            <td><small>Strict 252-column structural and semantic delivery format</small></td>
+        </tr>
+        
+        <tr>
+            <td><strong>MANUFACTURER_SOURCING</strong></td>
+            <td>Operational live sourcing pipeline</td>
+            <td>Active with domain allowlisting & HTTPS</td>
+            <td><span class="badge badge-exact">PASS</span></td>
+            <td><small>Real manufacturer sourcing attempts executed</small></td>
+        </tr>
+        
+        <tr>
+            <td><strong>NEMOTRON_LLM</strong></td>
+            <td>Live NIM execution with bounded retries and graceful fallback</td>
+            <td>16 Live NIM inferences</td>
+            <td><span class="badge badge-exact">PASS</span></td>
+            <td><small>Live NIM connected with rate limiting & backoff</small></td>
+        </tr>
+        
+        <tr>
+            <td><strong>HITL_WORKFLOW</strong></td>
+            <td>Persistent review queue active for confidence < 0.90</td>
+            <td>Active</td>
+            <td><span class="badge badge-exact">PASS</span></td>
+            <td><small>Low-confidence items routed to persistent HITL queue</small></td>
+        </tr>
+        
+        <tr>
+            <td><strong>GROUND_TRUTH_ACCURACY</strong></td>
+            <td>Strict field accuracy >= 50.0%</td>
+            <td>Strict: 6.25%, Normalized: 7.14%</td>
+            <td><span class="badge badge-mismatch">FAIL</span></td>
+            <td><small>Measured on authoritative golden records without synthetic data</small></td>
+        </tr>
+        
+        <tr>
+            <td><strong>DOCKER_PORTABILITY</strong></td>
+            <td>Fully containerized and executable via docker compose</td>
+            <td>Verified Dockerfile & docker-compose configurations</td>
+            <td><span class="badge badge-exact">PASS</span></td>
+            <td><small>Backend and frontend contain complete container definitions</small></td>
+        </tr>
+        
+            </tbody>
+        </table>
+
+        <!-- Section 3: Dataset Profile Overview -->
+        <h2 class="section-title">Official Dataset Profile (Parts 1 & 2)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dataset</th>
+                    <th>Path</th>
+                    <th>Records</th>
+                    <th>Columns</th>
+                    <th>Key Completeness</th>
+                    <th>SHA-256 Checksum</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Raw Supplier Input</strong></td>
+                    <td><code>D:\unihack-nscie\backend\data\2 datasets\Unihack_ Sample Dataset - Input.csv</code></td>
+                    <td>1000</td>
+                    <td>6</td>
+                    <td>100.0% (1 dup)</td>
+                    <td><code>ed41b50e26c83d08...</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Authoritative Golden Output</strong></td>
+                    <td><code>D:\unihack-nscie\backend\data\2 datasets\Unihack_ Expected Output - Delivery Format.csv</code></td>
+                    <td>2</td>
+                    <td>252 (252-Col)</td>
+                    <td>100.0%</td>
+                    <td><code>3304b26f4c3fc3cd...</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Section 4: Golden Accuracy & Product Detail -->
+        <h2 class="section-title">Official Golden Comparison Detail (Part 12)</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+            Direct field-by-field validation of NS-CIE production output against the official Unihack golden references (<code>PDSH4816AF</code> and <code>WDTS7024RZ</code>).
+        </p>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="m-0" style="color: var(--primary);">Product: PDSH4816AF</h3>
+                <div>
+                    <span class="badge badge-mismatch">
+                        PARTIAL MISMATCH
+                    </span>
+                    <span class="badge badge-neutral">Confidence: 0.88</span>
+                </div>
+            </div>
+            <div style="overflow-x: auto; max-height: 400px; margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Expected (Golden)</th>
+                            <th>Actual (NS-CIE)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td><strong>BRAND_NAME</strong></td>
+                            <td class="text-truncate">FRIGIDAIRE®</td>
+                            <td class="text-truncate">FRIGIDAIRE®</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MANUFACTURER_NAME</strong></td>
+                            <td class="text-truncate">Rheem Manufacturing</td>
+                            <td class="text-truncate">Rheem Manufacturing</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MANUFACTURER_PART_NUMBER</strong></td>
+                            <td class="text-truncate">PDSH4816AF</td>
+                            <td class="text-truncate">PDSH4816AF</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MOBILE_DESC</strong></td>
+                            <td class="text-truncate">Rheem Manufacturing FRIGIDAIRE, Dishwasher, Professional Series, PDSH4816AF</td>
+                            <td class="text-truncate">FRIGIDAIRE®, Dishwasher, PDSH4816AF - Commercial Grade Dishwasher</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>INVOICE_DESC</strong></td>
+                            <td class="text-truncate">DISHWASHER LEG 5 SST 120V 15A 50-1/4IN</td>
+                            <td class="text-truncate">DISHWASHER SST</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>SHORT_DESC</strong></td>
+                            <td class="text-truncate">FRIGIDAIRE® Professional Series PDSH4816AF Dishwasher With CleanBoost™, Leg Mounting, 5-Wash Cycle, Stainless Steel</td>
+                            <td class="text-truncate">FRIGIDAIRE®, PDSH4816AF, Dishwasher</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>LONG_DESC1</strong></td>
+                            <td class="text-truncate">FRIGIDAIRE® Dishwasher With CleanBoost™, Professional Series, 5 Wash Cycles, 120 V, 15 A, Leg Mounting, 24 in W x 24-1/4 in D, 50-1/4 in Depth With Door Open, 8-1/2 in Upper Rack, 11-1/4 in Lower Rack Minimum Height, 10-3/8 in Upper Rack, 13-1/4 in Lower Rack Maximum Height, 47 dBA Sound Level, Stainless Steel, Additional Information: 240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours</td>
+                            <td class="text-truncate">The FRIGIDAIRE® PDSH4816AF is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>RETAIL_DESC</strong></td>
+                            <td class="text-truncate">Professional Series Dishwasher, Leg Mounting, 5-Wash Cycle, Stainless Steel</td>
+                            <td class="text-truncate">FRIGIDAIRE® PDSH4816AF Dishwasher in Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Classpath</strong></td>
+                            <td class="text-truncate">Appliances & Consumer Electronics>Kitchen Appliances>Built-In Dishwashers</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Dept</strong></td>
+                            <td class="text-truncate">Appliances</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Class</strong></td>
+                            <td class="text-truncate">Large Appliances</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Fine</strong></td>
+                            <td class="text-truncate">Dishwashers</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MFR URL</strong></td>
+                            <td class="text-truncate">https://www.frigidaire.com/en/p/owner-center/product-support/PDSH4816AF</td>
+                            <td class="text-truncate">https://www.frigidaire.com/product/PDSH4816AF</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Product Name</strong></td>
+                            <td class="text-truncate">Dishwasher</td>
+                            <td class="text-truncate">FRIGIDAIRE® PDSH4816AF Dishwasher in Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>With</strong></td>
+                            <td class="text-truncate">With CleanBoost™</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Standard/Approvals</strong></td>
+                            <td class="text-truncate">ASSE 1006|CEE Tier 2 Qualified|cUL Listed|ENERGY STAR Certified|NSF Certified|UL Listed</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Warranty</strong></td>
+                            <td class="text-truncate">1 Year Manufacturer, 1 Year Labor and Parts</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Product Image</strong></td>
+                            <td class="text-truncate">FRIGIDAIRE_PDSH4816AF.jpg</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Specification Sheet</strong></td>
+                            <td class="text-truncate">FRIGIDAIRE_PDSH4816AF_Specification_Sheet.pdf</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Actual Image (Yes/No)</strong></td>
+                            <td class="text-truncate">Yes</td>
+                            <td class="text-truncate">Yes</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 1</strong></td>
+                            <td class="text-truncate">Series</td>
+                            <td class="text-truncate">Material</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 1</strong></td>
+                            <td class="text-truncate">Professional Series</td>
+                            <td class="text-truncate">Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 2</strong></td>
+                            <td class="text-truncate">Model</td>
+                            <td class="text-truncate">Item Type</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 3</strong></td>
+                            <td class="text-truncate">Number of Wash Cycles</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 3</strong></td>
+                            <td class="text-truncate">5</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 4</strong></td>
+                            <td class="text-truncate">Voltage Rating</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 4</strong></td>
+                            <td class="text-truncate">120</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 4</strong></td>
+                            <td class="text-truncate">V</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 5</strong></td>
+                            <td class="text-truncate">Amperage Rating</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 5</strong></td>
+                            <td class="text-truncate">15</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 5</strong></td>
+                            <td class="text-truncate">A</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 6</strong></td>
+                            <td class="text-truncate">Mounting Type</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 6</strong></td>
+                            <td class="text-truncate">Leg</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 7</strong></td>
+                            <td class="text-truncate">Plug Type</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 8</strong></td>
+                            <td class="text-truncate">Size</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 8</strong></td>
+                            <td class="text-truncate">24 in W x 24-1/4 in D</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 9</strong></td>
+                            <td class="text-truncate">Depth With Door Open</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 9</strong></td>
+                            <td class="text-truncate">50-1/4</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 9</strong></td>
+                            <td class="text-truncate">in</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 10</strong></td>
+                            <td class="text-truncate">Minimum Height</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 10</strong></td>
+                            <td class="text-truncate">8-1/2 in Upper Rack, 11-1/4 in Lower Rack</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 11</strong></td>
+                            <td class="text-truncate">Maximum Height</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 11</strong></td>
+                            <td class="text-truncate">10-3/8 in Upper Rack, 13-1/4 in Lower Rack</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 12</strong></td>
+                            <td class="text-truncate">Sound Level</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 12</strong></td>
+                            <td class="text-truncate">47</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 12</strong></td>
+                            <td class="text-truncate">dBA</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 13</strong></td>
+                            <td class="text-truncate">Material</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 13</strong></td>
+                            <td class="text-truncate">Stainless Steel</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 14</strong></td>
+                            <td class="text-truncate">Color</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 15</strong></td>
+                            <td class="text-truncate">Additional Information</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 15</strong></td>
+                            <td class="text-truncate">240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="m-0" style="color: var(--primary);">Product: WDTS7024RZ</h3>
+                <div>
+                    <span class="badge badge-mismatch">
+                        PARTIAL MISMATCH
+                    </span>
+                    <span class="badge badge-neutral">Confidence: 0.88</span>
+                </div>
+            </div>
+            <div style="overflow-x: auto; max-height: 400px; margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Expected (Golden)</th>
+                            <th>Actual (NS-CIE)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td><strong>BRAND_NAME</strong></td>
+                            <td class="text-truncate">Whirlpool®</td>
+                            <td class="text-truncate">WHIRLPOOL®</td>
+                            <td><span class="badge badge-norm">PASS (NORMALIZED: case_insensitive_trademark_stripped)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MANUFACTURER_NAME</strong></td>
+                            <td class="text-truncate">Whirlpool Corporation</td>
+                            <td class="text-truncate">Whirlpool Corporation</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MANUFACTURER_PART_NUMBER</strong></td>
+                            <td class="text-truncate">WDTS7024RZ</td>
+                            <td class="text-truncate">WDTS7024RZ</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MOBILE_DESC</strong></td>
+                            <td class="text-truncate">Whirlpool, Dishwasher, Eco Series, WDTS7024RZ, Built-in Mounting</td>
+                            <td class="text-truncate">WHIRLPOOL®, Dishwasher, WDTS7024RZ - Commercial Grade Dishwasher</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>INVOICE_DESC</strong></td>
+                            <td class="text-truncate">DISHWASHER BLTLN SST SST 120V 10A 41DBA</td>
+                            <td class="text-truncate">DISHWASHER SST</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>SHORT_DESC</strong></td>
+                            <td class="text-truncate">Whirlpool® Eco Series WDTS7024RZ Dishwasher, Built-in Mounting, Stainless Steel, Stainless Steel</td>
+                            <td class="text-truncate">WHIRLPOOL®, WDTS7024RZ, Dishwasher</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>LONG_DESC1</strong></td>
+                            <td class="text-truncate">Whirlpool® Dishwasher, Eco Series, 120 V, 10 A, Built-in Mounting, 33-7/16 in H x 23-7/8 in W x 22-5/8 in D, 50-3/16 in Depth With Door Open, 33-7/16 in Minimum Height, 41 dBA Sound Level, Stainless Steel, Stainless Steel, Additional Information: Folding Tines, Leak Detection System, Moisture Repellent Silverware Basket, Normal Cycle, Quick Wash Cycle, Sani Rinse Option, Sensor Cycle, Triple Wash Spray</td>
+                            <td class="text-truncate">The WHIRLPOOL® WDTS7024RZ is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>RETAIL_DESC</strong></td>
+                            <td class="text-truncate">Eco Series Dishwasher, Built-in Mounting, Stainless Steel, Stainless Steel</td>
+                            <td class="text-truncate">WHIRLPOOL® WDTS7024RZ Dishwasher in Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MARKETING_DESCRIPTION</strong></td>
+                            <td class="text-truncate">Load more and run less with our quietest and largest capacity dishwasher. A 3rd Rack provides dedicated space for mugs and bowls, while an adjustable 2nd Rack helps fit all the dishes and pans your family piles up.</td>
+                            <td class="text-truncate">The WHIRLPOOL® WDTS7024RZ is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Classpath</strong></td>
+                            <td class="text-truncate">Appliances & Consumer Electronics>Kitchen Appliances>Built-In Dishwashers</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Dept</strong></td>
+                            <td class="text-truncate">Appliances</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Class</strong></td>
+                            <td class="text-truncate">Large Appliances</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Fine</strong></td>
+                            <td class="text-truncate">Dishwashers</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>MFR URL</strong></td>
+                            <td class="text-truncate">https://learnwhirlpool.com/smartsearchresults?searchtext=WDTS7024R</td>
+                            <td class="text-truncate">https://www.whirlpool.com/product/WDTS7024RZ</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Product Name</strong></td>
+                            <td class="text-truncate">Dishwasher</td>
+                            <td class="text-truncate">WHIRLPOOL® WDTS7024RZ Dishwasher in Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>With</strong></td>
+                            <td class="text-truncate">With Washing 3rd Rack, Water Repellent Silverware Basket</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Product Image</strong></td>
+                            <td class="text-truncate">Whirlpool_WDTS7024RZ.jpg</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Specification Sheet</strong></td>
+                            <td class="text-truncate">Whirlpool_WDTS7024RZ_Specification_Sheet.pdf</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>Actual Image (Yes/No)</strong></td>
+                            <td class="text-truncate">Yes</td>
+                            <td class="text-truncate">Yes</td>
+                            <td><span class="badge badge-exact">PASS (EXACT)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_1</strong></td>
+                            <td class="text-truncate">3rd rack with extra wash action</td>
+                            <td class="text-truncate">Constructed with high-grade Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_2</strong></td>
+                            <td class="text-truncate">Adjustable 2nd Rack</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_3</strong></td>
+                            <td class="text-truncate">41 dBA</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_4</strong></td>
+                            <td class="text-truncate">Moisture Repellent Silverware Basket</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_5</strong></td>
+                            <td class="text-truncate">Sensor cycle</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_6</strong></td>
+                            <td class="text-truncate">Sani Rinse Option</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_7</strong></td>
+                            <td class="text-truncate">Leak Detection System</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_8</strong></td>
+                            <td class="text-truncate">Folding Tines</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_9</strong></td>
+                            <td class="text-truncate">Normal cycle</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_10</strong></td>
+                            <td class="text-truncate">Triple Wash Spray</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ITEM_FEATURES_11</strong></td>
+                            <td class="text-truncate">Quick Wash Cycle</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 1</strong></td>
+                            <td class="text-truncate">Series</td>
+                            <td class="text-truncate">Material</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 1</strong></td>
+                            <td class="text-truncate">Eco Series</td>
+                            <td class="text-truncate">Stainless Steel</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 2</strong></td>
+                            <td class="text-truncate">Model</td>
+                            <td class="text-truncate">Item Type</td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 3</strong></td>
+                            <td class="text-truncate">Number of Wash Cycles</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 4</strong></td>
+                            <td class="text-truncate">Voltage Rating</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 4</strong></td>
+                            <td class="text-truncate">120</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 4</strong></td>
+                            <td class="text-truncate">V</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 5</strong></td>
+                            <td class="text-truncate">Amperage Rating</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 5</strong></td>
+                            <td class="text-truncate">10</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 5</strong></td>
+                            <td class="text-truncate">A</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 6</strong></td>
+                            <td class="text-truncate">Mounting Type</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 6</strong></td>
+                            <td class="text-truncate">Built-in</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 7</strong></td>
+                            <td class="text-truncate">Plug Type</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 8</strong></td>
+                            <td class="text-truncate">Size</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 8</strong></td>
+                            <td class="text-truncate">33-7/16 in H x 23-7/8 in W x 22-5/8 in D</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 9</strong></td>
+                            <td class="text-truncate">Depth With Door Open</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 9</strong></td>
+                            <td class="text-truncate">50-3/16</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 9</strong></td>
+                            <td class="text-truncate">in</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 10</strong></td>
+                            <td class="text-truncate">Minimum Height</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 10</strong></td>
+                            <td class="text-truncate">33-7/16</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 10</strong></td>
+                            <td class="text-truncate">in</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 11</strong></td>
+                            <td class="text-truncate">Maximum Height</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 12</strong></td>
+                            <td class="text-truncate">Sound Level</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 12</strong></td>
+                            <td class="text-truncate">41</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_UOM 12</strong></td>
+                            <td class="text-truncate">dBA</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 13</strong></td>
+                            <td class="text-truncate">Material</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 13</strong></td>
+                            <td class="text-truncate">Stainless Steel</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 14</strong></td>
+                            <td class="text-truncate">Color</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 14</strong></td>
+                            <td class="text-truncate">Stainless Steel</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_LABEL 15</strong></td>
+                            <td class="text-truncate">Additional Information</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                        <tr>
+                            <td><strong>ATTRIBUTE_VALUE 15</strong></td>
+                            <td class="text-truncate">Folding Tines, Leak Detection System, Moisture Repellent Silverware Basket, Normal Cycle, Quick Wash Cycle, Sani Rinse Option, Sensor Cycle, Triple Wash Spray</td>
+                            <td class="text-truncate"></td>
+                            <td><span class="badge badge-mismatch">FAIL (MISMATCH)</span></td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+
+        <!-- Section 5: Field-Level Accuracy Breakdown -->
+        <h2 class="section-title">Field-Level Accuracy Scorecard (Part 10)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Comparable Denominator</th>
+                    <th>Exact Matches</th>
+                    <th>Normalized Matches</th>
+                    <th>Mismatches</th>
+                    <th>Strict Accuracy</th>
+                    <th>Normalized Accuracy</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td><code>BRAND_NAME</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">1</span></td>
+            <td><span class="badge badge-norm">1</span></td>
+            <td><span class="badge badge-mismatch">0</span></td>
+            <td><strong>50.0%</strong></td>
+            <td><strong>100.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>MANUFACTURER_NAME</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">2</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">0</span></td>
+            <td><strong>100.0%</strong></td>
+            <td><strong>100.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>MANUFACTURER_PART_NUMBER</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">2</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">0</span></td>
+            <td><strong>100.0%</strong></td>
+            <td><strong>100.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>MOBILE_DESC</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>INVOICE_DESC</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>SHORT_DESC</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>LONG_DESC1</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>RETAIL_DESC</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>MARKETING_DESCRIPTION</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Classpath</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Dept</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Class</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Fine</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>MFR URL</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Product Name</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>With</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Standard/Approvals</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Warranty</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Product Image</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Specification Sheet</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">2</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>Actual Image (Yes/No)</code></td>
+            <td>2</td>
+            <td><span class="badge badge-exact">2</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">0</span></td>
+            <td><strong>100.0%</strong></td>
+            <td><strong>100.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>ITEM_FEATURES_1</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>ITEM_FEATURES_2</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>ITEM_FEATURES_3</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><code>ITEM_FEATURES_4</code></td>
+            <td>1</td>
+            <td><span class="badge badge-exact">0</span></td>
+            <td><span class="badge badge-norm">0</span></td>
+            <td><span class="badge badge-mismatch">1</span></td>
+            <td><strong>0.0%</strong></td>
+            <td><strong>0.0%</strong></td>
+        </tr>
+        
+            </tbody>
+        </table>
+
+        <!-- Section 6: Sourcing & LLM Intelligence -->
+        <h2 class="section-title">Manufacturer Intelligence & Extraction Sourcing (Parts 5 & 6)</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card">
+                <h3 style="margin-top: 0; color: var(--primary);">Manufacturer Sourcing</h3>
+                <p>Live Sourcing Attempts: <strong>1000</strong></p>
+                <p>Source Success Rate: <strong>100.0%</strong></p>
+                <p>Cache Hit Rate: <strong>0.0%</strong></p>
+                <p>Source Types: HTML (1000), PDF (0)</p>
+            </div>
+            <div class="card">
+                <h3 style="margin-top: 0; color: var(--primary);">Nemotron / LLM Extraction</h3>
+                <p>Configured Model: <code>nvidia/nemotron-3.5-lightning-30b-a3b</code></p>
+                <p>Active Engine: <strong>NVIDIA NIM / Nemotron (fallback active on 429)</strong></p>
+                <p>Heuristic Fallback Count: <strong>984</strong> (graceful 429 backoff)</p>
+                <p>P50 Extraction Latency: <strong>11247.58 ms</strong></p>
+            </div>
+        </div>
+
+        <!-- Section 7: Top Error Categories -->
+        <h2 class="section-title">Error Taxonomy & Anomaly Analysis (Part 13)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Error Category</th>
+                    <th>Detected Occurrences</th>
+                    <th>Proportion</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td><strong>LLM</strong></td>
+            <td>984</td>
+            <td>90.3%</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ATTRIBUTE</strong></td>
+            <td>72</td>
+            <td>6.6%</td>
+        </tr>
+        
+        <tr>
+            <td><strong>DESCRIPTION</strong></td>
+            <td>11</td>
+            <td>1.0%</td>
+        </tr>
+        
+        <tr>
+            <td><strong>UOM</strong></td>
+            <td>9</td>
+            <td>0.8%</td>
+        </tr>
+        
+        <tr>
+            <td><strong>TAXONOMY</strong></td>
+            <td>6</td>
+            <td>0.6%</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SOURCE</strong></td>
+            <td>6</td>
+            <td>0.6%</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SCHEMA</strong></td>
+            <td>2</td>
+            <td>0.2%</td>
+        </tr>
+        
+            </tbody>
+        </table>
+
+        <!-- Section 8: Reproducibility & Audit Trail -->
+        <h2 class="section-title">Reproducibility & Run Manifest (Part 21)</h2>
+        <div class="card">
+            <p><strong>Run ID:</strong> <code>unihack_20260819_055657</code></p>
+            <p><strong>Timestamp:</strong> 20260819_055657</p>
+            <p><strong>Git Commit:</strong> <code>b9c8b3b3a64f2c77c6c7205161d6ca571f1ed46d</code></p>
+            <p><strong>Input Dataset Path:</strong> <code>D:\unihack-nscie\backend\data\2 datasets\Unihack_ Sample Dataset - Input.csv</code> (SHA256: <code>ed41b50e26c83d0859d563028107fa81a799b5b4b9e3d5743eb846dbd3c7b862</code>)</p>
+            <p><strong>Golden Dataset Path:</strong> <code>D:\unihack-nscie\backend\data\2 datasets\Unihack_ Expected Output - Delivery Format.csv</code> (SHA256: <code>3304b26f4c3fc3cd5d51b32161cf1900c26e6a7fe238578e53f6f7132df7c580</code>)</p>
+            <p><strong>Software Versions:</strong> Python 3.12/3.14, FastAPI 0.115, Pydantic 2.10, Pandas 2.2</p>
+        </div>
+    </div>
+</body>
+</html>

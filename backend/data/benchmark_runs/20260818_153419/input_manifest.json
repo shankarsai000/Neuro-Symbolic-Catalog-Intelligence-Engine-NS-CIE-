@@ -1,0 +1,21 @@
+{
+  "dataset_name": "Unihack Sample Dataset - Input",
+  "file_path": "D:\\unihack-nscie\\backend\\app\\data\\Unihack_ Sample Dataset - Input.csv",
+  "file_size_bytes": 128673,
+  "sha256": "ed41b50e26c83d0859d563028107fa81a799b5b4b9e3d5743eb846dbd3c7b862",
+  "total_rows": 1000,
+  "total_columns": 6,
+  "column_names": [
+    "Mfg_Part_Num",
+    "Part_Desc",
+    "E1_Brand",
+    "Unilog_Brand",
+    "DIB_Brand",
+    "Part_Manuf"
+  ],
+  "primary_candidate_key": "Mfg_Part_Num",
+  "unique_keys": 999,
+  "duplicate_keys": 1,
+  "null_keys": 0,
+  "created_at": "2026-08-18T15:34:20.003785+00:00"
+}

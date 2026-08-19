@@ -1,0 +1,121 @@
+{
+  "total_records_checked": 1000,
+  "schema_pass_count": 984,
+  "schema_fail_count": 16,
+  "schema_pass_rate_pct": 98.4,
+  "exact_column_count_expected": 252,
+  "failure_samples": [
+    {
+      "mfg_part_num": "DBDS12125G01F",
+      "row_number": 14,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 16] Glued UOM detected in ATTRIBUTE_VALUE 16: '20mm'"
+    },
+    {
+      "mfg_part_num": "DBDS14125G01F",
+      "row_number": 16,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 16] Glued UOM detected in ATTRIBUTE_VALUE 16: '20mm'"
+    },
+    {
+      "mfg_part_num": "49-94-0058",
+      "row_number": 25,
+      "issue_count": 2,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 16] Glued UOM detected in ATTRIBUTE_VALUE 16: '12\" x 1/8\" x 20mm Metal Cut Off Wheel -T' | [ATTRIBUTE_VALUE 18] Glued UOM detected in ATTRIBUTE_VALUE 18: '12\" x 1/8\" x 20mm Metal Cut Off Wheel -T'"
+    },
+    {
+      "mfg_part_num": "49-94-0068",
+      "row_number": 27,
+      "issue_count": 2,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 16] Glued UOM detected in ATTRIBUTE_VALUE 16: '14\" x 1/8\" x 20mm Metal Cut Off Wheel -T' | [ATTRIBUTE_VALUE 18] Glued UOM detected in ATTRIBUTE_VALUE 18: '14\" x 1/8\" x 20mm Metal Cut Off Wheel -T'"
+    },
+    {
+      "mfg_part_num": "62-1777",
+      "row_number": 442,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: '7; Hi pot - DC-1550V; Edge-lit - Yes Amp'"
+    },
+    {
+      "mfg_part_num": "62-1778",
+      "row_number": 443,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: '9; Hi pot - DC-1550V; Edge-lit - Yes Amp'"
+    },
+    {
+      "mfg_part_num": "62-1784",
+      "row_number": 444,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: '9; Hi pot - DC-1550V; Edge-lit - Yes Amp'"
+    },
+    {
+      "mfg_part_num": "62-1787",
+      "row_number": 445,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: '6; Hi pot - DC-1550V; Edge-lit - Yes Amp'"
+    },
+    {
+      "mfg_part_num": "62-1788",
+      "row_number": 446,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: '8; Hi pot - DC-1550V; Edge-lit - Yes Amp'"
+    },
+    {
+      "mfg_part_num": "S3709",
+      "row_number": 458,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: '5/CL/E17/130V CARDED 25 Watt T6 1/2 Inca'"
+    },
+    {
+      "mfg_part_num": "S3720",
+      "row_number": 460,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: 'S3720 40W A15 APPLIANCE CLR S3720 40W A1'"
+    },
+    {
+      "mfg_part_num": "S3702",
+      "row_number": 461,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: 'S3702 40W T10 CLEAR CARDED MED BASE S370'"
+    },
+    {
+      "mfg_part_num": "S3703",
+      "row_number": 462,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: 'S3703 40W T10 STD FROST CARDED S3703 40W'"
+    },
+    {
+      "mfg_part_num": "S21354",
+      "row_number": 470,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: 'S21354 8T9/LED/CL/927/120V/E26 S21354 8T'"
+    },
+    {
+      "mfg_part_num": "S11445",
+      "row_number": 472,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 5] Glued UOM detected in ATTRIBUTE_VALUE 5: 'S11445 12A19/PIR/930/120V/ND S11445 12A1'"
+    },
+    {
+      "mfg_part_num": "25759",
+      "row_number": 759,
+      "issue_count": 8,
+      "issue_types": "MISSING_REQUIRED",
+      "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+    }
+  ]
+}

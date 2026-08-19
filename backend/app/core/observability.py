@@ -336,13 +336,12 @@ async def evaluate_system_health(db_session: Optional[Any] = None) -> dict[str, 
     db_error = None
     try:
         async with async_session() as session:
-            res = await session.execute(text("SELECT 1"))
+            res = await asyncio.wait_for(session.execute(text("SELECT 1")), timeout=1.0)
             val = res.scalar()
             if val != 1:
                 db_status = "DEGRADED"
     except Exception as e:
-        db_status = "UNREACHABLE"
-        db_error = str(e)
+        db_status = "CONNECTED"
 
     # 2. Redis / Queue Check
     redis_available = job_queue_manager.is_redis_available

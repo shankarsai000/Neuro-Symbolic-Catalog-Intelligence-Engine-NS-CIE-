@@ -12,6 +12,8 @@ class ExtractedAttributes(BaseModel):
     dimensions: Optional[str] = Field(default=None, description="Physical dimensions or size")
     mounting: Optional[str] = Field(default=None, description="Mounting type (e.g. Leg, Built-In)")
     material: Optional[str] = Field(default=None, description="Product material (e.g. Stainless Steel, SST)")
+    series: Optional[str] = Field(default=None, description="Product series line (e.g. Professional Series, Eco Series)")
+    mfr_url: Optional[str] = Field(default=None, description="Official manufacturer datasheet/support URL")
     raw_specs: dict[str, Any] = Field(default_factory=dict, description="Additional key-value specifications")
 
 
@@ -67,8 +69,24 @@ class EnrichmentRequest(BaseModel):
     )
     raw_manuf: Optional[str] = Field(
         default=None,
-        examples=["FRIGIDAIRE"],
-        description="Raw manufacturer name if available",
+        examples=["Appliance Dealers Cooperative (APPDE)"],
+        description="Raw distributor / supplier string from input",
+    )
+    raw_brand: Optional[str] = Field(
+        default=None,
+        description="Raw brand string from input",
+    )
+    e1_brand: Optional[str] = Field(
+        default=None,
+        description="E1 brand field",
+    )
+    unilog_brand: Optional[str] = Field(
+        default=None,
+        description="Unilog brand field",
+    )
+    dib_brand: Optional[str] = Field(
+        default=None,
+        description="DIB brand field",
     )
 
 

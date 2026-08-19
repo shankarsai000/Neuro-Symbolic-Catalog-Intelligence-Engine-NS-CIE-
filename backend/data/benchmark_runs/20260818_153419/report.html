@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS-CIE Unihack Benchmark Report</title>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: #131b2e;
+            --surface-border: #1f2d4d;
+            --primary: #38bdf8;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+        .header .meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .grid-kpi {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .card .title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .card .value.success { color: var(--success); }
+        .card .value.primary { color: var(--primary); }
+        .card .value.warning { color: var(--warning); }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--surface-border);
+        }
+        th {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        code {
+            background: #1e293b;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #38bdf8;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-exact { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .badge-norm { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .badge-mismatch { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .badge-neutral { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        .text-truncate {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>NS-CIE Unihack Validation Report</h1>
+                <div class="meta">Run Timestamp: 20260818_153419 | Engine: Neuro-Symbolic Catalog Intelligence Engine</div>
+            </div>
+            <div>
+                <span class="badge badge-exact">Official Dataset Run</span>
+            </div>
+        </div>
+
+        <div class="grid-kpi">
+            <div class="card">
+                <div class="title">Total Input Records</div>
+                <div class="value">1000</div>
+            </div>
+            <div class="card">
+                <div class="title">Golden Records Evaluated</div>
+                <div class="value primary">2 / 2</div>
+            </div>
+            <div class="card">
+                <div class="title">Ground Truth Field Accuracy</div>
+                <div class="value success">3.57%</div>
+            </div>
+            <div class="card">
+                <div class="title">252-Col Schema Compliance</div>
+                <div class="value success">99.7%</div>
+            </div>
+            <div class="card">
+                <div class="title">Execution Time (Avg)</div>
+                <div class="value">19842.0 ms</div>
+            </div>
+            <div class="card">
+                <div class="title">HITL Review Rate</div>
+                <div class="value warning">96.6%</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Official Golden Comparison (PDSH4816AF & WDTS7024RZ)</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Only records with authoritative ground truth are evaluated for accuracy. The remaining 997 records are marked <code>GROUND_TRUTH_UNAVAILABLE</code>.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>MPN</th>
+                    <th>Field</th>
+                    <th>Classification</th>
+                    <th>Expected (Golden)</th>
+                    <th>Actual (NS-CIE)</th>
+                    <th>Normalization Rule</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>BRAND_NAME</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">FRIGIDAIRE®</td>
+                <td class="text-truncate">Appliance Dealers Cooperative</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>MANUFACTURER_NAME</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Rheem Manufacturing</td>
+                <td class="text-truncate">Appliance Dealers Cooperative</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>MANUFACTURER_PART_NUMBER</strong></td>
+                <td><span class="badge badge-exact">EXACT_MATCH</span></td>
+                <td class="text-truncate">PDSH4816AF</td>
+                <td class="text-truncate">PDSH4816AF</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>MOBILE_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Rheem Manufacturing FRIGIDAIRE, Dishwasher, Professional Series, PDSH4816AF</td>
+                <td class="text-truncate">Appliance Dealers Cooperative, Dishwasher, PDSH4816AF - Commercial Grade Dishwas</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>INVOICE_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">DISHWASHER LEG 5 SST 120V 15A 50-1/4IN</td>
+                <td class="text-truncate">DISHWASHER SST</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>SHORT_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">FRIGIDAIRE® Professional Series PDSH4816AF Dishwasher With CleanBoost™, Leg Mounting, 5-Wash Cycle, Stainless Steel</td>
+                <td class="text-truncate">Appliance Dealers Cooperative, PDSH4816AF, Dishwasher</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>LONG_DESC1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">FRIGIDAIRE® Dishwasher With CleanBoost™, Professional Series, 5 Wash Cycles, 120 V, 15 A, Leg Mounting, 24 in W x 24-1/4 in D, 50-1/4 in Depth With Door Open, 8-1/2 in Upper Rack, 11-1/4 in Lower Rack Minimum Height, 10-3/8 in Upper Rack, 13-1/4 in Lower Rack Maximum Height, 47 dBA Sound Level, Stainless Steel, Additional Information: 240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours</td>
+                <td class="text-truncate">The Appliance Dealers Cooperative PDSH4816AF is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>RETAIL_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Professional Series Dishwasher, Leg Mounting, 5-Wash Cycle, Stainless Steel</td>
+                <td class="text-truncate">Appliance Dealers Cooperative PDSH4816AF Dishwasher in Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Classpath</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Appliances & Consumer Electronics>Kitchen Appliances>Built-In Dishwashers</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Dept</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Appliances</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Class</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Large Appliances</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Fine</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Dishwashers</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>MFR URL</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">https://www.frigidaire.com/en/p/owner-center/product-support/PDSH4816AF</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Product Name</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Dishwasher</td>
+                <td class="text-truncate">Appliance Dealers Cooperative PDSH4816AF Dishwasher in Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>With</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">With CleanBoost™</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Standard/Approvals</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">ASSE 1006|CEE Tier 2 Qualified|cUL Listed|ENERGY STAR Certified|NSF Certified|UL Listed</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Warranty</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">1 Year Manufacturer, 1 Year Labor and Parts</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Product Image</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">FRIGIDAIRE_PDSH4816AF.jpg</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Specification Sheet</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">FRIGIDAIRE_PDSH4816AF_Specification_Sheet.pdf</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>Actual Image (Yes/No)</strong></td>
+                <td><span class="badge badge-exact">EXACT_MATCH</span></td>
+                <td class="text-truncate">Yes</td>
+                <td class="text-truncate">Yes</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Series</td>
+                <td class="text-truncate">Material</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Professional Series</td>
+                <td class="text-truncate">Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 2</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Model</td>
+                <td class="text-truncate">Item Type</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 3</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Number of Wash Cycles</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 3</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">5</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Voltage Rating</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">120</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_UOM 4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">V</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Amperage Rating</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">15</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_UOM 5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">A</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 6</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Mounting Type</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 6</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Leg</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 7</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Plug Type</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 8</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Size</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 8</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">24 in W x 24-1/4 in D</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Depth With Door Open</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">50-1/4</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_UOM 9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">in</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 10</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Minimum Height</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 10</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">8-1/2 in Upper Rack, 11-1/4 in Lower Rack</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 11</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Maximum Height</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 11</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">10-3/8 in Upper Rack, 13-1/4 in Lower Rack</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 12</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Sound Level</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 12</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">47</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_UOM 12</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">dBA</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 13</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Material</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 13</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Stainless Steel</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 14</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Color</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_LABEL 15</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Additional Information</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>PDSH4816AF</code></td>
+                <td><strong>ATTRIBUTE_VALUE 15</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>BRAND_NAME</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool®</td>
+                <td class="text-truncate">Appliance Dealers Cooperative</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>MANUFACTURER_NAME</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool Corporation</td>
+                <td class="text-truncate">Appliance Dealers Cooperative</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>MANUFACTURER_PART_NUMBER</strong></td>
+                <td><span class="badge badge-exact">EXACT_MATCH</span></td>
+                <td class="text-truncate">WDTS7024RZ</td>
+                <td class="text-truncate">WDTS7024RZ</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>MOBILE_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool, Dishwasher, Eco Series, WDTS7024RZ, Built-in Mounting</td>
+                <td class="text-truncate">Appliance Dealers Cooperative, Dishwasher, WDTS7024RZ - Commercial Grade Dishwas</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>INVOICE_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">DISHWASHER BLTLN SST SST 120V 10A 41DBA</td>
+                <td class="text-truncate">DISHWASHER SST</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>SHORT_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool® Eco Series WDTS7024RZ Dishwasher, Built-in Mounting, Stainless Steel, Stainless Steel</td>
+                <td class="text-truncate">Appliance Dealers Cooperative, WDTS7024RZ, Dishwasher</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>LONG_DESC1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool® Dishwasher, Eco Series, 120 V, 10 A, Built-in Mounting, 33-7/16 in H x 23-7/8 in W x 22-5/8 in D, 50-3/16 in Depth With Door Open, 33-7/16 in Minimum Height, 41 dBA Sound Level, Stainless Steel, Stainless Steel, Additional Information: Folding Tines, Leak Detection System, Moisture Repellent Silverware Basket, Normal Cycle, Quick Wash Cycle, Sani Rinse Option, Sensor Cycle, Triple Wash Spray</td>
+                <td class="text-truncate">The Appliance Dealers Cooperative WDTS7024RZ is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>RETAIL_DESC</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Eco Series Dishwasher, Built-in Mounting, Stainless Steel, Stainless Steel</td>
+                <td class="text-truncate">Appliance Dealers Cooperative WDTS7024RZ Dishwasher in Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>MARKETING_DESCRIPTION</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Load more and run less with our quietest and largest capacity dishwasher. A 3rd Rack provides dedicated space for mugs and bowls, while an adjustable 2nd Rack helps fit all the dishes and pans your family piles up.</td>
+                <td class="text-truncate">The Appliance Dealers Cooperative WDTS7024RZ is a commercial-grade dishwasher designed for professional and industrial applications. Engineered with durable stainless steel construction.</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Classpath</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Appliances & Consumer Electronics>Kitchen Appliances>Built-In Dishwashers</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Dept</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Appliances</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Class</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Large Appliances</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Fine</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Dishwashers</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>MFR URL</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">https://learnwhirlpool.com/smartsearchresults?searchtext=WDTS7024R</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Product Name</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Dishwasher</td>
+                <td class="text-truncate">Appliance Dealers Cooperative WDTS7024RZ Dishwasher in Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>With</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">With Washing 3rd Rack, Water Repellent Silverware Basket</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Product Image</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool_WDTS7024RZ.jpg</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Specification Sheet</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Whirlpool_WDTS7024RZ_Specification_Sheet.pdf</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>Actual Image (Yes/No)</strong></td>
+                <td><span class="badge badge-exact">EXACT_MATCH</span></td>
+                <td class="text-truncate">Yes</td>
+                <td class="text-truncate">Yes</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">3rd rack with extra wash action</td>
+                <td class="text-truncate">Constructed with high-grade Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_2</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Adjustable 2nd Rack</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_3</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">41 dBA</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Moisture Repellent Silverware Basket</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Sensor cycle</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_6</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Sani Rinse Option</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_7</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Leak Detection System</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_8</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Folding Tines</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Normal cycle</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_10</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Triple Wash Spray</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ITEM_FEATURES_11</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Quick Wash Cycle</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Series</td>
+                <td class="text-truncate">Material</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 1</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Eco Series</td>
+                <td class="text-truncate">Stainless Steel</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 2</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Model</td>
+                <td class="text-truncate">Item Type</td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 3</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Number of Wash Cycles</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Voltage Rating</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">120</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_UOM 4</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">V</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Amperage Rating</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">10</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_UOM 5</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">A</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 6</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Mounting Type</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 6</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Built-in</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 7</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Plug Type</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 8</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Size</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 8</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">33-7/16 in H x 23-7/8 in W x 22-5/8 in D</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Depth With Door Open</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">50-3/16</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_UOM 9</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">in</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 10</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Minimum Height</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 10</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">33-7/16</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_UOM 10</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">in</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 11</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Maximum Height</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 12</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Sound Level</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 12</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">41</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_UOM 12</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">dBA</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 13</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Material</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 13</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Stainless Steel</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 14</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Color</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 14</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Stainless Steel</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_LABEL 15</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Additional Information</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            <tr>
+                <td><code>WDTS7024RZ</code></td>
+                <td><strong>ATTRIBUTE_VALUE 15</strong></td>
+                <td><span class="badge badge-mismatch">MISMATCH</span></td>
+                <td class="text-truncate">Folding Tines, Leak Detection System, Moisture Repellent Silverware Basket, Normal Cycle, Quick Wash Cycle, Sani Rinse Option, Sensor Cycle, Triple Wash Spray</td>
+                <td class="text-truncate"></td>
+                <td><small>-</small></td>
+            </tr>
+            
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Accuracy by Field (Lowest Performing)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Accuracy</th>
+                    <th>Total Compared</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td><strong>BRAND_NAME</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>MANUFACTURER_NAME</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>MOBILE_DESC</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>INVOICE_DESC</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SHORT_DESC</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>LONG_DESC1</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>RETAIL_DESC</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Classpath</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Dept</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Class</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Fine</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>MFR URL</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Product Name</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>With</strong></td>
+            <td>0.0%</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>Standard/Approvals</strong></td>
+            <td>0.0%</td>
+            <td>1</td>
+        </tr>
+        
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Pipeline Sourcing Breakdown</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Source Mode</th>
+                    <th>Record Count</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>NVIDIA NIM / LLM Mode</td>
+                    <td>0</td>
+                    <td>0.0%</td>
+                </tr>
+                <tr>
+                    <td>Offline Heuristic Engine</td>
+                    <td>1000</td>
+                    <td>100.0%</td>
+                </tr>
+                <tr>
+                    <td>Fallback Mode</td>
+                    <td>0</td>
+                    <td>0.0%</td>
+                </tr>
+                <tr>
+                    <td>Cache Hits</td>
+                    <td>0</td>
+                    <td>0.0%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

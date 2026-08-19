@@ -1,0 +1,30 @@
+{
+  "total_records_checked": 1000,
+  "schema_pass_count": 997,
+  "schema_fail_count": 3,
+  "schema_pass_rate_pct": 99.7,
+  "exact_column_count_expected": 252,
+  "failure_samples": [
+    {
+      "mfg_part_num": "49-94-0058",
+      "row_number": 25,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 2] Glued UOM detected in ATTRIBUTE_VALUE 2: '12\" x 1/8\" x 20mm Metal Cut Off Wheel -T'"
+    },
+    {
+      "mfg_part_num": "49-94-0068",
+      "row_number": 27,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 2] Glued UOM detected in ATTRIBUTE_VALUE 2: '14\" x 1/8\" x 20mm Metal Cut Off Wheel -T'"
+    },
+    {
+      "mfg_part_num": "48-11-2330",
+      "row_number": 741,
+      "issue_count": 1,
+      "issue_types": "INVALID_UOM",
+      "issue_messages": "[ATTRIBUTE_VALUE 1] Glued UOM detected in ATTRIBUTE_VALUE 1: 'Heated Gear 12V Power Source w/ App Cont'"
+    }
+  ]
+}
