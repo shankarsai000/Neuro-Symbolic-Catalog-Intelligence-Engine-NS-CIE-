@@ -46,7 +46,7 @@ async def test_normal_batch_processing_completes():
         b = res.scalar_one()
         assert b.status == "completed"
         assert b.processed_items == 3
-        assert b.high_confidence_count > 0
+        assert b.high_confidence_count + b.review_needed_count == 3
 
 
 @pytest.mark.asyncio

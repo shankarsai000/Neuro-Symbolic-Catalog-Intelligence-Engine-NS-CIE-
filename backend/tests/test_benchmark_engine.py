@@ -91,20 +91,34 @@ async def test_error_reporting_completeness():
 
 @pytest.mark.asyncio
 async def test_reproducibility_deterministic_hash():
-    """Verify that running benchmark twice on identical input produces identical hash and metrics."""
-    await init_db()
-    report1 = await run_ground_truth_benchmark(
-        run_name="Deterministic Run 1",
-        sample_limit=5,
-    )
-    report2 = await run_ground_truth_benchmark(
-        run_name="Deterministic Run 2",
-        sample_limit=5,
-    )
+    """Verify that running benchmark twice on identical input produces identical hash and metrics.
 
-    assert report1["predictions_hash"] == report2["predictions_hash"]
-    assert report1["metrics"] == report2["metrics"]
-    assert report1["confidence_distribution"] == report2["confidence_distribution"]
+    Forces OFFLINE_HEURISTIC mode because live LLM outputs are inherently
+    non-deterministic (temperature, server-side sampling) and would break
+    hash reproducibility even with temperature=0.
+    """
+    await init_db()
+
+    # Force deterministic (offline heuristic) mode for reproducibility
+    from app.ai.nvidia_client import nvidia_client
+    original_key = nvidia_client.api_key
+    nvidia_client.api_key = "dummy_key_if_missing"
+
+    try:
+        report1 = await run_ground_truth_benchmark(
+            run_name="Deterministic Run 1",
+            sample_limit=5,
+        )
+        report2 = await run_ground_truth_benchmark(
+            run_name="Deterministic Run 2",
+            sample_limit=5,
+        )
+
+        assert report1["predictions_hash"] == report2["predictions_hash"]
+        assert report1["metrics"] == report2["metrics"]
+        assert report1["confidence_distribution"] == report2["confidence_distribution"]
+    finally:
+        nvidia_client.api_key = original_key
 
 
 @pytest.mark.asyncio

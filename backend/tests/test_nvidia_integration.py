@@ -34,7 +34,7 @@ def test_nvidia_client_configuration():
 @pytest.mark.asyncio
 async def test_model_health_check_unconfigured():
     """Verify ModelHealthCheck returns transparent unconfigured status."""
-    client = NVIDIAClient(api_key="")
+    client = NVIDIAClient(api_key="dummy_key_if_missing")
     status = await ModelHealthCheck.check_health(client)
     assert status["status"] == "unconfigured"
     assert status["configured"] is False
@@ -168,7 +168,7 @@ async def test_extraction_retry_policy():
         return "SUCCESS"
 
     policy = ExtractionRetryPolicy(max_retries=3, base_delay=0.01)
-    result = await policy.execute_with_retry(flaky_call)
+    result, retries = await policy.execute_async(flaky_call)
     assert result == "SUCCESS"
     assert attempts == 2
 

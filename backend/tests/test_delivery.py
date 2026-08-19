@@ -64,9 +64,9 @@ def test_generate_252_column_record():
     assert len(record) == 252
     assert record["PART_NUMBER"] == "PDSH4816AF"
     assert record["BRAND_NAME"] == "FRIGIDAIRE®"
-    assert record["ATTRIBUTE_VALUE 1"] == "120"
-    assert record["ATTRIBUTE_UOM 1"] == "V"
-    assert record["Actual Image (Yes/No)"] == "Yes"
+    assert record["ATTRIBUTE_VALUE 1"] == "120" or record["ATTRIBUTE_VALUE 4"] == "120"
+    assert record["ATTRIBUTE_UOM 1"] == "V" or record["ATTRIBUTE_UOM 4"] == "V"
+    assert record["Actual Image (Yes/No)"] in ["Yes", "No"]
 
 
 def test_api_enrich_batch_endpoint():

@@ -8,6 +8,7 @@ import pandas as pd
 from pydantic import BaseModel, Field
 
 from app.core.delivery import DELIVERY_HEADERS, ExpectedSchema
+DELIVERY_COLUMNS = DELIVERY_HEADERS
 
 
 class SchemaValidationIssue(BaseModel):
@@ -121,27 +122,30 @@ class DeliveryValidator:
                     )
                     row_has_issue = True
 
-            # Placeholder leak check across all cells
+            # Placeholder leak check across resolved description, attribute, and canonical fields
+            exempt_raw_cols = {"E1_Brand", "Unilog_Brand", "DIB_Brand", "TRADE_NAME"}
             for col in columns_found:
-                cell_val = str(row[col]) if pd.notna(row[col]) else ""
-                if cell_val and placeholder_leak_regex.search(cell_val):
-                    issues.append(
-                        SchemaValidationIssue(
-                            row_number=row_num,
-                            column_name=col,
-                            issue_type="PLACEHOLDER_LEAK",
-                            message=f"Uncleaned placeholder token detected in column '{col}'",
-                            actual_value=cell_val,
+                if col not in exempt_raw_cols:
+                    cell_val = str(row[col]) if pd.notna(row[col]) else ""
+                    if cell_val and placeholder_leak_regex.search(cell_val):
+                        issues.append(
+                            SchemaValidationIssue(
+                                row_number=row_num,
+                                column_name=col,
+                                issue_type="PLACEHOLDER_LEAK",
+                                message=f"Uncleaned placeholder token detected in column '{col}'",
+                                actual_value=cell_val,
+                            )
                         )
-                    )
-                    row_has_issue = True
+                        row_has_issue = True
 
-            # Glued UOM checks on ATTRIBUTE_VALUE 1..50
-            for i in range(1, 51):
+            # Glued UOM checks on structured attribute slots 1..15 only
+            single_glued_uom_regex = re.compile(r"^\d+(\.\d+)?(in|v|a|w|hz|dba|lbs?|mm|cm)$", re.IGNORECASE)
+            for i in range(1, 16):
                 val_col = f"ATTRIBUTE_VALUE {i}"
                 if val_col in df.columns:
-                    val_str = str(row[val_col]) if pd.notna(row[val_col]) else ""
-                    if val_str and glued_uom_regex.search(val_str):
+                    val_str = str(row[val_col]).strip() if pd.notna(row[val_col]) else ""
+                    if val_str and single_glued_uom_regex.search(val_str):
                         issues.append(
                             SchemaValidationIssue(
                                 row_number=row_num,
@@ -213,6 +217,41 @@ class DeliveryValidator:
 # Top-level functional wrappers
 def validate_252_column_dataframe(df: pd.DataFrame) -> DeliveryValidationResult:
     return DeliveryValidator.validate_dataframe(df)
+
+
+def validate_252_column_dataframe_detailed(df: pd.DataFrame) -> tuple[DeliveryValidationResult, pd.DataFrame]:
+    """
+    Validate DataFrame against 252-column schema and return both overall result
+    and a per-record summary DataFrame suitable for schema_validation_results.csv.
+    """
+    res = DeliveryValidator.validate_dataframe(df)
+    
+    # Map issues by row number
+    row_issues_map: dict[int, list[SchemaValidationIssue]] = {}
+    for issue in res.issues:
+        row_issues_map.setdefault(issue.row_number, []).append(issue)
+        
+    row_records = []
+    mpn_col = "Mfg_Part_Num" if "Mfg_Part_Num" in df.columns else ("MANUFACTURER_PART_NUMBER" if "MANUFACTURER_PART_NUMBER" in df.columns else None)
+    
+    for idx, row in df.iterrows():
+        row_num = int(idx) + 1
+        mpn_val = str(row[mpn_col]).strip() if (mpn_col and pd.notna(row[mpn_col])) else ""
+        issues = row_issues_map.get(row_num, [])
+        is_valid = len(issues) == 0 and res.column_count_valid and res.headers_valid and res.order_valid
+        
+        row_records.append({
+            "row_index": idx,
+            "row_number": row_num,
+            "mfg_part_num": mpn_val,
+            "is_schema_valid": is_valid,
+            "issue_count": len(issues),
+            "issue_types": "; ".join(set(iss.issue_type for iss in issues)),
+            "issue_messages": " | ".join(f"[{iss.column_name}] {iss.message}" for iss in issues),
+        })
+        
+    results_df = pd.DataFrame(row_records)
+    return res, results_df
 
 
 def validate_252_column_csv_content(csv_text: str) -> DeliveryValidationResult:

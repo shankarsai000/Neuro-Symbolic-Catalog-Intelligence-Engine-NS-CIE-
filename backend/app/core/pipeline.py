@@ -66,11 +66,21 @@ async def run_enrichment_pipeline(
     if batch_job_id is not None:
         current_batch_id.set(batch_job_id)
 
-    # Step 1: Placeholder sanitization & canonical brand resolution
+    # Step 0: Input Record Validation
+    if not (request.mfg_part_num and request.mfg_part_num.strip()) and not (request.part_desc and request.part_desc.strip()):
+        raise ValueError("EMPTY_INPUT_RECORD: Request contains empty manufacturing part number and part description.")
+
+    # Step 1: Placeholder sanitization & master entity resolution
     with trace_stage_sync("SANITIZATION_AND_BRAND_RESOLUTION", metadata={"mpn": request.mfg_part_num}):
         sanitized_desc = clean_placeholders(request.part_desc) or request.part_desc
         raw_manuf_clean = clean_placeholders(request.raw_manuf)
-        canonical_brand, brand_score = master_data_repository.resolve_canonical_brand(raw_manuf_clean)
+        raw_brand_clean = clean_placeholders(request.raw_brand)
+        canonical_brand, canonical_manufacturer, supplier_name, brand_score = master_data_repository.resolve_entity(
+            raw_desc=sanitized_desc,
+            mpn=request.mfg_part_num,
+            raw_brand=raw_brand_clean,
+            raw_manuf=raw_manuf_clean,
+        )
 
     # Step 2: Category Detection & Schema Resolution
     with trace_stage_sync("CATEGORY_DETECTION", metadata={"mpn": request.mfg_part_num}):
@@ -101,7 +111,7 @@ async def run_enrichment_pipeline(
             manufacturer=canonical_brand or None,
             category=category_schema.name,
             allowed_lovs=list(category_schema.allowed_lovs.get("item_type", [])),
-            manufacturer_evidence=sourced_evidence.extracted_text or None,
+            manufacturer_evidence=sourced_evidence,
             mpn=request.mfg_part_num,
         )
     llm_duration_ms = (time.perf_counter() - llm_start) * 1000.0
@@ -213,6 +223,7 @@ async def run_enrichment_pipeline(
         delivery_record = generate_252_column_record(
             raw_req=request,
             canonical_brand=final_attributes.brand or canonical_brand or "",
+            canonical_manufacturer=canonical_manufacturer,
             attrs=final_attributes,
             descriptions=channel_dict,
             confidence=confidence_breakdown.total_confidence,

@@ -214,7 +214,7 @@ async def test_review_queue_workflow_and_action_history():
 
     async with async_session() as db:
         review_repo = ReviewQueueRepository(db)
-        pending = await review_repo.list_pending()
+        pending = await review_repo.list_pending(limit=2000)
         pending_ids = [p.id for p in pending]
         assert review_id in pending_ids
 
