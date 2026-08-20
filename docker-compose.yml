@@ -34,6 +34,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: nscie_backend
+    ports:
+      - "8001:8000" 
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nscie_user}:${POSTGRES_PASSWORD:-nscie_password}@postgres:5432/${POSTGRES_DB:-nscie_db}
@@ -82,7 +84,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3005
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8888
     depends_on:
       backend:
         condition: service_healthy
