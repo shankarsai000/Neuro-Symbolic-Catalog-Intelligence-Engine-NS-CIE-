@@ -1837,7 +1837,7 @@ export default function Dashboard() {
                         <Cpu className="w-4 h-4 text-emerald-400" />
                         <span className="text-xs font-bold text-white">NVIDIA NIM Endpoint</span>
                       </div>
-                      {(metrics?.nvidia_nim?.is_configured || metrics?.nvidia_nim?.configured) ? (
+                      {metrics?.nvidia_nim?.is_configured ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
                           Configured
                         </span>
@@ -1849,7 +1849,7 @@ export default function Dashboard() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 font-mono">
                       <div>Model: {metrics?.llm_model || "offline_heuristic"}</div>
-                      <div>Status: {metrics?.nvidia_nim?.health_status || ((metrics?.nvidia_nim?.is_configured || metrics?.nvidia_nim?.configured) ? "LIVE NIM Ready" : "Heuristic active")}</div>
+                      <div>Status: {metrics?.nvidia_nim?.health_status || (metrics?.nvidia_nim?.is_configured ? "LIVE NIM Ready" : "Heuristic active")}</div>
                     </div>
                   </div>
 
