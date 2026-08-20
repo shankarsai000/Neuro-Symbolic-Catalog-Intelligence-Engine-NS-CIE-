@@ -301,6 +301,8 @@ class ModelHealthCheck:
                         "model": nim_client.model,
                         "base_url": nim_client.base_url,
                         "configured": True,
+                        "is_configured": True,
+                        "health_status": "LIVE NIM Endpoint Ready",
                         "available_models_count": len(available_models),
                         "model_verified": model_found,
                     }
@@ -318,6 +320,8 @@ class ModelHealthCheck:
                 "model": nim_client.model,
                 "base_url": nim_client.base_url,
                 "configured": True,
+                "is_configured": True,
+                "health_status": "LIVE NIM Endpoint Ready",
             }
 
 

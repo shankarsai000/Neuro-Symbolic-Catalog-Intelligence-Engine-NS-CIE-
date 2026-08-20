@@ -1,0 +1,14 @@
+Metric,Previous Run,Current Run,Change
+Processing Success Rate (%),100.0,98.7,-1.3
+252-Column Schema Pass Rate (%),99.7,99.3,-0.4
+Manufacturer Source Success Rate (%),100.0,100.0,0.0 (No Change)
+LIVE_NIM Request Count,14.0,939.0,+925.0
+Offline Heuristic Fallback Count,986.0,40.0,-946.0
+Average Confidence Score,0.8737,0.7193,-0.1544
+HITL Review Rate (%),98.4,99.8,+1.4
+Strict Golden Field Accuracy (%),3.57,90.18,+86.61
+Normalized Golden Field Accuracy (%),3.57,91.07,+87.5
+Strict Golden Record Accuracy (%),0.0,0.0,0.0 (No Change)
+Normalized Golden Record Accuracy (%),0.0,0.0,0.0 (No Change)
+Average Latency (ms),26080.73,77068.58,+50987.85
+P95 Latency (ms),66782.35,170874.24,+104091.89

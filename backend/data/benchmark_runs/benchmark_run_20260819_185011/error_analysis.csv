@@ -1,0 +1,71 @@
+mfg_part_num,error_category,field,expected,actual,message
+25-A,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty,Schema failure in row 96: MISSING_REQUIRED
+FS C01 2004S,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty,Schema failure in row 304: MISSING_REQUIRED
+FS C04 2004S,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty,Schema failure in row 305: MISSING_REQUIRED
+FS C06 2004S,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty,Schema failure in row 306: MISSING_REQUIRED
+S11860,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty,Schema failure in row 433: MISSING_REQUIRED
+35459,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty,Schema failure in row 758: MISSING_REQUIRED
+25168,SCHEMA,252_COLUMN_SCHEMA,Valid 252-column schema,[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty,Schema failure in row 762: MISSING_REQUIRED
+3MABR-7100075678,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+DBDS12125A01F,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+49-94-0033,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+49-94-0123,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+PDSH4816AF,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+WDTS7024RZ,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+25-A,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+AGB15512WT,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+AGB15512AW,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+AGB15516FW,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+ADCB15516SG,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+AGB15512BS,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+1516891,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+73018091,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+FS C01 2004S,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+FS C04 2004S,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+FS C06 2004S,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+40503,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+65-1222,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+65-1224,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+52678BK,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+65-771R3,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+64-110,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+65-572R1,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+42200BK,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+42200BKCS,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S11860,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+62-1778,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S3720,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S3702,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S3703,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S3797,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S11429,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S21354,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S21363,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+S11445,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+566364,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+588533,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+571463,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+566661,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+564450,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+PGE29BYTFS,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+K527APBXR,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+59261,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+KB121VS,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+35459,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+25168,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+35494,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+25468,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+DSA0500B,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+DT202B,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+D0648TSF,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+DCS714B,LLM,NEMOTRON_EXTRACTION,Successful structured extraction,Extraction failed,NIM rate limit or extraction failure
+PDSH4816AF,DESCRIPTION,MOBILE_DESC,"Rheem Manufacturing FRIGIDAIRE, Dishwasher, Professional Series, PDSH4816AF","FRIGIDAIRE®, Dishwasher, Professional Series, PDSH4816AF, Leg Mounting, Stainles",Ground truth mismatch on MOBILE_DESC
+PDSH4816AF,DESCRIPTION,SHORT_DESC,"FRIGIDAIRE® Professional Series PDSH4816AF Dishwasher With CleanBoost™, Leg Mounting, 5-Wash Cycle, Stainless Steel","FRIGIDAIRE®, Professional Series, PDSH4816AF, Dishwasher, With CleanBoost™, Leg Mounting, 5-Wash Cycle, Stainless Steel",Ground truth mismatch on SHORT_DESC
+PDSH4816AF,DESCRIPTION,LONG_DESC1,"FRIGIDAIRE® Dishwasher With CleanBoost™, Professional Series, 5 Wash Cycles, 120 V, 15 A, Leg Mounting, 24 in W x 24-1/4 in D, 50-1/4 in Depth With Door Open, 8-1/2 in Upper Rack, 11-1/4 in Lower Rack Minimum Height, 10-3/8 in Upper Rack, 13-1/4 in Lower Rack Maximum Height, 47 dBA Sound Level, Stainless Steel, Additional Information: 240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours","FRIGIDAIRE® Dishwasher With CleanBoost™, Professional Series, 5 Wash Cycles, 120 V, 15 A, Leg Mounting, 24 in W x 24-1/4 in D, 50-1/4 in Depth With Door Open, 8-1/2 in Upper Rack, 11-1/4 in Lower Rack Minimum Height, 10-3/8 in Upper Rack, 13-1/4 in Lower Rack Maximum Height, 47 dBA, Stainless Steel, Additional Information: 240 kW-hr Annual Energy, 1 to 12 hr Delay Start Hours",Ground truth mismatch on LONG_DESC1
+PDSH4816AF,DESCRIPTION,RETAIL_DESC,"Professional Series Dishwasher, Leg Mounting, 5-Wash Cycle, Stainless Steel","FRIGIDAIRE®, Professional Series, Dishwasher, Leg Mounting, 5-Wash Cycle, Stainless Steel",Ground truth mismatch on RETAIL_DESC
+PDSH4816AF,SOURCE,MFR URL,https://www.frigidaire.com/en/p/owner-center/product-support/PDSH4816AF,https://www.frigidaire.com/product/PDSH4816AF,Ground truth mismatch on MFR URL
+WDTS7024RZ,DESCRIPTION,MOBILE_DESC,"Whirlpool, Dishwasher, Eco Series, WDTS7024RZ, Built-in Mounting","WHIRLPOOL®, Dishwasher, Eco Series, WDTS7024RZ, Built-In Mounting, Stainless Ste",Ground truth mismatch on MOBILE_DESC
+WDTS7024RZ,DESCRIPTION,SHORT_DESC,"Whirlpool® Eco Series WDTS7024RZ Dishwasher, Built-in Mounting, Stainless Steel, Stainless Steel","WHIRLPOOL®, Eco Series, WDTS7024RZ, Dishwasher, With Washing 3rd Rack, Water Repellent Silverware Basket, Built-In Mounting, Stainless Steel",Ground truth mismatch on SHORT_DESC
+WDTS7024RZ,DESCRIPTION,LONG_DESC1,"Whirlpool® Dishwasher, Eco Series, 120 V, 10 A, Built-in Mounting, 33-7/16 in H x 23-7/8 in W x 22-5/8 in D, 50-3/16 in Depth With Door Open, 33-7/16 in Minimum Height, 41 dBA Sound Level, Stainless Steel, Stainless Steel, Additional Information: Folding Tines, Leak Detection System, Moisture Repellent Silverware Basket, Normal Cycle, Quick Wash Cycle, Sani Rinse Option, Sensor Cycle, Triple Wash Spray","WHIRLPOOL® Dishwasher With Washing 3rd Rack, Water Repellent Silverware Basket, Eco Series, 120 V, 10 A, Built-In Mounting, 33-7/16 in H x 23-7/8 in W x 22-5/8 in D, 50-3/16 in Depth With Door Open, 33-7/16 in Minimum Height, 41 dBA, Stainless Steel, Stainless Steel, Additional Information: Folding Tines, Leak Detection System, Moisture Repellent Silverware Basket, Normal Cycle, Quick Wash Cycle, Sani Rinse Option, Sensor Cycle, Triple Wash Spray",Ground truth mismatch on LONG_DESC1
+WDTS7024RZ,DESCRIPTION,RETAIL_DESC,"Eco Series Dishwasher, Built-in Mounting, Stainless Steel, Stainless Steel","WHIRLPOOL®, Eco Series, Dishwasher, Built-In Mounting, Stainless Steel",Ground truth mismatch on RETAIL_DESC
+WDTS7024RZ,SOURCE,MFR URL,https://learnwhirlpool.com/smartsearchresults?searchtext=WDTS7024R,https://www.whirlpool.com/product/WDTS7024RZ,Ground truth mismatch on MFR URL

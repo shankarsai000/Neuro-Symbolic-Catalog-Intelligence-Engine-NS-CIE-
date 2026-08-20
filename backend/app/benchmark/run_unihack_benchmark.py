@@ -601,10 +601,9 @@ async def run_full_evaluation(
                     "schema_valid": False,
                     "error_message": str(e),
                 }
-                fallback = {col: "" for col in DELIVERY_HEADERS}
-                fallback["Mfg_Part_Num"] = mpn
-                fallback["Part_Desc"] = desc
-                fallback["Part_Manuf"] = manuf
+                from app.schemas.delivery_schema import format_252_delivery_record
+                raw_fallback = {"Mfg_Part_Num": mpn, "Part_Desc": desc, "Part_Manuf": manuf}
+                fallback = format_252_delivery_record(raw_fallback)
                 return err_dict, fallback
 
     tasks = [process_row(idx, row) for idx, row in processing_df.iterrows()]

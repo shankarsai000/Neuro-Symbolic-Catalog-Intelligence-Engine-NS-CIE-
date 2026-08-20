@@ -28,6 +28,8 @@ def resolve_provenance_score(source_type: Optional[str], http_status: Optional[i
         if http_status == 200:
             return 1.00
         return 0.95
+    if "nim" in st_clean or "live_nim" in st_clean:
+        return 0.85
     if "distributor" in st_clean or "supplier" in st_clean:
         return 0.70
     if "unverifiable" in st_clean or "heuristic" in st_clean:

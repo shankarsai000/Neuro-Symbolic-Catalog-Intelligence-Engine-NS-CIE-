@@ -19,7 +19,7 @@ WORKDIR /app
 RUN apk add --no-cache curl wget
 
 ENV NODE_ENV=production \
-    PORT=3000 \
+    PORT=3005 \
     HOST=0.0.0.0 \
     NEXT_TELEMETRY_DISABLED=1
 
@@ -30,6 +30,6 @@ COPY --from=builder /app/node_modules ./node_modules
 
 USER node
 
-EXPOSE 3000
+EXPOSE 3005
 
 CMD ["npm", "start"]

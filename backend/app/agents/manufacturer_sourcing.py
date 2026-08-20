@@ -308,7 +308,7 @@ source_cache = SourceCache()
 class WebFetcher:
     """Async HTTP fetcher enforcing HTTPS, size limits, redirect validation, and retries."""
 
-    def __init__(self, allowlist: Optional[DomainAllowlist] = None, timeout_sec: float = 4.0) -> None:
+    def __init__(self, allowlist: Optional[DomainAllowlist] = None, timeout_sec: float = 1.0) -> None:
         self.allowlist = allowlist or domain_allowlist
         self.timeout_sec = timeout_sec
 
@@ -467,7 +467,7 @@ async def fetch_official_manufacturer_specs(
         )
         return result
 
-    fetcher = WebFetcher(domain_allowlist, timeout_sec=4.0)
+    fetcher = WebFetcher(domain_allowlist, timeout_sec=1.0)
 
     try:
         status_code, final_url, content_bytes, content_type = await fetcher.fetch(

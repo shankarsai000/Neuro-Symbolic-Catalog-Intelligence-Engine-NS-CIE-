@@ -1,0 +1,8 @@
+{
+  "total_records_checked": 1000,
+  "schema_pass_count": 1000,
+  "schema_fail_count": 0,
+  "schema_pass_rate_pct": 100.0,
+  "exact_column_count_expected": 252,
+  "failure_samples": []
+}

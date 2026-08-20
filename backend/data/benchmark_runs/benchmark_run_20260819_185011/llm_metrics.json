@@ -1,0 +1,24 @@
+{
+  "configured_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "actual_model": "NVIDIA NIM / Nemotron (fallback active on 429)",
+  "llm_requests": 991,
+  "successful_llm_requests": 966,
+  "failed_llm_requests": 53,
+  "timeouts": 0,
+  "invalid_structured_outputs": 0,
+  "retry_count": 0,
+  "fallback_count": 25,
+  "source_mode_distribution": {
+    "LIVE_NIM": 947,
+    "OFFLINE_HEURISTIC": 25,
+    "MANUFACTURER_SOURCE": 19,
+    "CACHE": 0,
+    "ERROR": 9
+  },
+  "live_nim_rate": 96.6,
+  "fallback_rate": 2.5,
+  "llm_success_rate": 97.48,
+  "average_llm_latency_ms": 53913.69,
+  "p50_llm_latency_ms": 54811.18,
+  "p95_llm_latency_ms": 141074.94
+}

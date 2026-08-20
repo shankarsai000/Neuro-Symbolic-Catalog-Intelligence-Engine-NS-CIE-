@@ -281,7 +281,7 @@ def build_channel_descriptions(
             short_parts.append(f"{cycles}-Wash Cycle")
     if material:
         short_parts.append(material)
-    if color and color.upper() != material.upper():
+    if color and material and color.upper() != material.upper():
         short_parts.append(color)
 
     short_desc = ", ".join(short_parts)
@@ -301,7 +301,7 @@ def build_channel_descriptions(
             title_parts.append(f"{cycles}-Wash Cycle")
     if material:
         title_parts.append(material)
-    if color and color.upper() != material.upper():
+    if color and material and color.upper() != material.upper():
         title_parts.append(color)
 
     product_title = ", ".join(title_parts)

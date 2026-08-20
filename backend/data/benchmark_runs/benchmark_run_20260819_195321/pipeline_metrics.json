@@ -1,0 +1,16 @@
+{
+  "total_input_records": 1000,
+  "records_started": 1000,
+  "records_completed": 989,
+  "total_processed": 989,
+  "records_failed": 11,
+  "records_schema_valid": 1000,
+  "total_schema_valid": 1000,
+  "records_schema_invalid": 0,
+  "processing_success_rate_pct": 98.9,
+  "schema_pass_rate_pct": 100.0,
+  "total_runtime_seconds": 2216.82,
+  "avg_latency_ms": 37662.61,
+  "p50_latency_ms": 39764.62,
+  "p95_latency_ms": 91478.0
+}

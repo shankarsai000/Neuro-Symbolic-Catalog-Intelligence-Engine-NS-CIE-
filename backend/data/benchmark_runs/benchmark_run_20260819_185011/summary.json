@@ -1,0 +1,322 @@
+{
+  "run_id": "unihack_20260819_185011",
+  "timestamp": "20260819_185011",
+  "run_output_dir": "D:\\unihack-nscie\\backend\\data\\benchmark_runs\\benchmark_run_20260819_185011",
+  "input_validation": {
+    "is_valid": true,
+    "row_count": 1000,
+    "duplicate_keys": 1
+  },
+  "golden_validation": {
+    "is_valid": true,
+    "row_count": 2,
+    "column_count": 252,
+    "golden_mpns": [
+      "PDSH4816AF",
+      "WDTS7024RZ"
+    ]
+  },
+  "pipeline_metrics": {
+    "total_input_records": 1000,
+    "records_started": 1000,
+    "records_completed": 991,
+    "total_processed": 991,
+    "records_failed": 9,
+    "records_schema_valid": 993,
+    "total_schema_valid": 993,
+    "records_schema_invalid": 7,
+    "processing_success_rate_pct": 99.1,
+    "schema_pass_rate_pct": 99.3,
+    "total_runtime_seconds": 3232.62,
+    "avg_latency_ms": 53913.69,
+    "p50_latency_ms": 54811.18,
+    "p95_latency_ms": 141074.94
+  },
+  "schema_metrics": {
+    "total_records_checked": 1000,
+    "schema_pass_count": 993,
+    "schema_fail_count": 7,
+    "schema_pass_rate_pct": 99.3,
+    "exact_column_count_expected": 252,
+    "failure_samples": [
+      {
+        "mfg_part_num": "25-A",
+        "row_number": 96,
+        "issue_count": 8,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+      },
+      {
+        "mfg_part_num": "FS C01 2004S",
+        "row_number": 304,
+        "issue_count": 8,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+      },
+      {
+        "mfg_part_num": "FS C04 2004S",
+        "row_number": 305,
+        "issue_count": 8,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+      },
+      {
+        "mfg_part_num": "FS C06 2004S",
+        "row_number": 306,
+        "issue_count": 8,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+      },
+      {
+        "mfg_part_num": "S11860",
+        "row_number": 433,
+        "issue_count": 8,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+      },
+      {
+        "mfg_part_num": "35459",
+        "row_number": 758,
+        "issue_count": 8,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty | [BRAND_NAME] Required column 'BRAND_NAME' is empty | [MANUFACTURER_PART_NUMBER] Required column 'MANUFACTURER_PART_NUMBER' is empty | [INVOICE_DESC] Required column 'INVOICE_DESC' is empty | [MOBILE_DESC] Required column 'MOBILE_DESC' is empty | [Product Name] Required column 'Product Name' is empty | [Actual Image (Yes/No)] Required column 'Actual Image (Yes/No)' is empty"
+      },
+      {
+        "mfg_part_num": "25168",
+        "row_number": 762,
+        "issue_count": 2,
+        "issue_types": "MISSING_REQUIRED",
+        "issue_messages": "[PART_NUMBER] Required column 'PART_NUMBER' is empty | [MANUFACTURER_NAME] Required column 'MANUFACTURER_NAME' is empty"
+      }
+    ]
+  },
+  "source_metrics": {
+    "manufacturer_source_attempts": 991,
+    "manufacturer_source_success": 991,
+    "manufacturer_source_failure": 0,
+    "manufacturer_cache_hits": 0,
+    "manufacturer_cache_misses": 991,
+    "source_success_rate": 100.0,
+    "cache_hit_rate": 0.0,
+    "official_source_domains_used": [],
+    "source_type_distribution": {
+      "HTML": 991,
+      "PDF": 0,
+      "OTHER": 9
+    },
+    "failure_reasons_categorized": {
+      "DOMAIN_NOT_ALLOWED": 0,
+      "NOT_FOUND": 0,
+      "TIMEOUT": 0,
+      "HTTP_ERROR": 0,
+      "PARSE_ERROR": 0,
+      "NO_EVIDENCE": 0,
+      "NO_SOURCE": 0,
+      "OTHER": 0
+    }
+  },
+  "llm_metrics": {
+    "configured_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "actual_model": "NVIDIA NIM / Nemotron (fallback active on 429)",
+    "llm_requests": 991,
+    "successful_llm_requests": 966,
+    "failed_llm_requests": 53,
+    "timeouts": 0,
+    "invalid_structured_outputs": 0,
+    "retry_count": 0,
+    "fallback_count": 25,
+    "source_mode_distribution": {
+      "LIVE_NIM": 947,
+      "OFFLINE_HEURISTIC": 25,
+      "MANUFACTURER_SOURCE": 19,
+      "CACHE": 0,
+      "ERROR": 9
+    },
+    "live_nim_rate": 96.6,
+    "fallback_rate": 2.5,
+    "llm_success_rate": 97.48,
+    "average_llm_latency_ms": 53913.69,
+    "p50_llm_latency_ms": 54811.18,
+    "p95_llm_latency_ms": 141074.94
+  },
+  "confidence_metrics": {
+    "formula": "C = 0.40 * Provenance + 0.35 * LOV + 0.25 * RuleCompliance",
+    "average_confidence": 0.7187,
+    "median_confidence": 0.705,
+    "minimum_confidence": 0.0,
+    "maximum_confidence": 1.0,
+    "distribution": {
+      "ge_90_count": 11,
+      "ge_90_pct": 1.1,
+      "between_75_89_count": 445,
+      "between_75_89_pct": 44.5,
+      "lt_75_count": 544,
+      "lt_75_pct": 54.4
+    },
+    "auto_approved_count": 3,
+    "auto_approval_rate_pct": 0.3,
+    "review_required_count": 997,
+    "hitl_rate_pct": 99.7
+  },
+  "golden_metrics": {
+    "golden_records_evaluated": 2,
+    "total_fields_compared": 398,
+    "comparable_fields_denominator": 112,
+    "exact_matches": 101,
+    "normalized_matches": 1,
+    "mismatches": 10,
+    "expected_empty": 286,
+    "strict_field_accuracy_pct": 90.18,
+    "normalized_field_accuracy_pct": 91.07,
+    "record_level_accuracy": {
+      "exact_record_matches": 0,
+      "exact_record_match_rate_pct": 0.0,
+      "normalized_record_matches": 0,
+      "normalized_record_match_rate_pct": 0.0,
+      "partial_matches": 2,
+      "complete_mismatches": 0
+    }
+  },
+  "readiness_assessment": {
+    "overall_status": "CONDITIONALLY_READY",
+    "evaluations": [
+      {
+        "criterion": "INPUT_PROCESSING",
+        "threshold": ">= 99.0%",
+        "measured": "99.1%",
+        "status": "PASS",
+        "notes": "Reliably completed processing across input dataset"
+      },
+      {
+        "criterion": "SCHEMA_COMPLIANCE",
+        "threshold": ">= 99.0%",
+        "measured": "99.3%",
+        "status": "PASS",
+        "notes": "Strict 252-column structural and semantic delivery format"
+      },
+      {
+        "criterion": "MANUFACTURER_SOURCING",
+        "threshold": "Operational live sourcing pipeline",
+        "measured": "Active with domain allowlisting & HTTPS",
+        "status": "PASS",
+        "notes": "Real manufacturer sourcing attempts executed"
+      },
+      {
+        "criterion": "NEMOTRON_LLM",
+        "threshold": "Live NIM execution with bounded retries and graceful fallback",
+        "measured": "966 Live NIM inferences",
+        "status": "PASS",
+        "notes": "Live NIM connected with rate limiting & backoff"
+      },
+      {
+        "criterion": "HITL_WORKFLOW",
+        "threshold": "Persistent review queue active for confidence < 0.90",
+        "measured": "Active",
+        "status": "PASS",
+        "notes": "Low-confidence items routed to persistent HITL queue"
+      },
+      {
+        "criterion": "GROUND_TRUTH_FIELD_ACCURACY",
+        "threshold": "Strict field accuracy >= 85.0%",
+        "measured": "Strict: 90.18%, Normalized: 91.07%",
+        "status": "PASS",
+        "notes": "Field-level accuracy measured on authoritative golden records"
+      },
+      {
+        "criterion": "GROUND_TRUTH_RECORD_ACCURACY",
+        "threshold": "Normalized record accuracy >= 50.0% (Exact record match required for production)",
+        "measured": "Exact: 0.0%, Normalized: 0.0%",
+        "status": "FAIL",
+        "notes": "Requires at least 1 complete golden record match; 0% record accuracy prevents production readiness"
+      },
+      {
+        "criterion": "DOCKER_PORTABILITY",
+        "threshold": "Fully containerized and executable via docker compose",
+        "measured": "Verified Dockerfile & docker-compose configurations",
+        "status": "PASS",
+        "notes": "Backend and frontend contain complete container definitions"
+      }
+    ],
+    "rationale": "Infrastructure and schema compliance pass; field accuracy meets 50% threshold, but record-level exactness is 0% (incomplete catalog accuracy)."
+  },
+  "comparison_with_previous_run": [
+    {
+      "Metric": "Processing Success Rate (%)",
+      "Previous Run": 100.0,
+      "Current Run": 99.1,
+      "Change": "-0.9"
+    },
+    {
+      "Metric": "252-Column Schema Pass Rate (%)",
+      "Previous Run": 99.7,
+      "Current Run": 99.3,
+      "Change": "-0.4"
+    },
+    {
+      "Metric": "Manufacturer Source Success Rate (%)",
+      "Previous Run": 100.0,
+      "Current Run": 100.0,
+      "Change": "0.0 (No Change)"
+    },
+    {
+      "Metric": "LIVE_NIM Request Count",
+      "Previous Run": 14,
+      "Current Run": 947,
+      "Change": "+933.0"
+    },
+    {
+      "Metric": "Offline Heuristic Fallback Count",
+      "Previous Run": 986,
+      "Current Run": 25,
+      "Change": "-961.0"
+    },
+    {
+      "Metric": "Average Confidence Score",
+      "Previous Run": 0.8737,
+      "Current Run": 0.7187,
+      "Change": "-0.155"
+    },
+    {
+      "Metric": "HITL Review Rate (%)",
+      "Previous Run": 98.4,
+      "Current Run": 99.7,
+      "Change": "+1.3"
+    },
+    {
+      "Metric": "Strict Golden Field Accuracy (%)",
+      "Previous Run": 3.57,
+      "Current Run": 90.18,
+      "Change": "+86.61"
+    },
+    {
+      "Metric": "Normalized Golden Field Accuracy (%)",
+      "Previous Run": 3.57,
+      "Current Run": 91.07,
+      "Change": "+87.5"
+    },
+    {
+      "Metric": "Strict Golden Record Accuracy (%)",
+      "Previous Run": 0.0,
+      "Current Run": 0.0,
+      "Change": "0.0 (No Change)"
+    },
+    {
+      "Metric": "Normalized Golden Record Accuracy (%)",
+      "Previous Run": 0.0,
+      "Current Run": 0.0,
+      "Change": "0.0 (No Change)"
+    },
+    {
+      "Metric": "Average Latency (ms)",
+      "Previous Run": 26080.73,
+      "Current Run": 53913.69,
+      "Change": "+27832.96"
+    },
+    {
+      "Metric": "P95 Latency (ms)",
+      "Previous Run": 66782.35,
+      "Current Run": 141074.94,
+      "Change": "+74292.59"
+    }
+  ]
+}

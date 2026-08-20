@@ -250,11 +250,12 @@ def evaluate_llm_metrics(tracking_records: list[dict[str, Any]], configured_mode
 
     heuristic_count = sum(1 for r in tracking_records if r.get("source_mode", "").upper() in ("OFFLINE_HEURISTIC", "FALLBACK"))
     cache_count = sum(1 for r in tracking_records if r.get("source_mode", "").upper() == "CACHE")
-    error_count = sum(1 for r in tracking_records if r.get("source_mode", "").upper() == "ERROR" or r.get("status") == "ERROR")
+    error_count = sum(1 for r in tracking_records if r.get("status") == "ERROR" or r.get("source_mode", "").upper() == "ERROR")
     
-    failed_llm = sum(1 for r in tracking_records if r.get("llm_failed", False))
+    # Request-level retry attempts vs terminal record-level source modes
+    failed_llm = sum(1 for r in tracking_records if r.get("status") == "ERROR")
     timeouts = sum(1 for r in tracking_records if r.get("llm_timeout", False))
-    fallback_count = sum(1 for r in tracking_records if r.get("source_mode", "").upper() in ("FALLBACK", "OFFLINE_HEURISTIC"))
+    fallback_count = heuristic_count
 
     latencies = [float(r["processing_time_ms"]) for r in tracking_records if r.get("processing_time_ms")]
     latencies.sort()

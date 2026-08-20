@@ -1,0 +1,19 @@
+{
+  "formula": "C = 0.40 * Provenance + 0.35 * LOV + 0.25 * RuleCompliance",
+  "average_confidence": 0.7187,
+  "median_confidence": 0.705,
+  "minimum_confidence": 0.0,
+  "maximum_confidence": 1.0,
+  "distribution": {
+    "ge_90_count": 11,
+    "ge_90_pct": 1.1,
+    "between_75_89_count": 445,
+    "between_75_89_pct": 44.5,
+    "lt_75_count": 544,
+    "lt_75_pct": 54.4
+  },
+  "auto_approved_count": 3,
+  "auto_approval_rate_pct": 0.3,
+  "review_required_count": 997,
+  "hitl_rate_pct": 99.7
+}

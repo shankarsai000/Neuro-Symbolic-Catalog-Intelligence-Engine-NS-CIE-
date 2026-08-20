@@ -33,10 +33,10 @@ class Settings(BaseSettings):
     )
     nvidia_timeout_sec: float = Field(default=float(os.getenv("NIM_REQUEST_TIMEOUT", "8.0")), description="HTTP timeout for NIM inference requests")
     nvidia_max_retries: int = Field(default=int(os.getenv("NIM_MAX_RETRIES", "3")), description="Maximum retries for NIM API errors")
-    nim_max_concurrency: int = Field(default=int(os.getenv("NIM_MAX_CONCURRENCY", "2")), description="Maximum parallel in-flight NIM requests")
+    nim_max_concurrency: int = Field(default=int(os.getenv("NIM_MAX_CONCURRENCY", "10")), description="Maximum parallel in-flight NIM requests")
     nim_backoff_base: float = Field(default=float(os.getenv("NIM_BACKOFF_BASE", "1.0")), description="Base backoff delay in seconds")
     nim_backoff_max: float = Field(default=float(os.getenv("NIM_BACKOFF_MAX", "8.0")), description="Maximum backoff delay in seconds")
-    nim_rate_limit_rpm: int = Field(default=int(os.getenv("NIM_RATE_LIMIT_RPM", "40")), description="Max NIM requests per minute")
+    nim_rate_limit_rpm: int = Field(default=int(os.getenv("NIM_RATE_LIMIT_RPM", "300")), description="Max NIM requests per minute")
     require_live_nim: bool = Field(default=False, description="Enforce hard failure if live NIM is unavailable in production")
     # Security Configuration
     secret_key: str = Field(default=os.getenv("SECRET_KEY", "nscie_default_secret_key_change_in_production"), description="Application secret key")

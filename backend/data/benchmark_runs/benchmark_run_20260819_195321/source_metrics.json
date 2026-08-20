@@ -1,0 +1,25 @@
+{
+  "manufacturer_source_attempts": 989,
+  "manufacturer_source_success": 989,
+  "manufacturer_source_failure": 0,
+  "manufacturer_cache_hits": 0,
+  "manufacturer_cache_misses": 989,
+  "source_success_rate": 100.0,
+  "cache_hit_rate": 0.0,
+  "official_source_domains_used": [],
+  "source_type_distribution": {
+    "HTML": 989,
+    "PDF": 0,
+    "OTHER": 11
+  },
+  "failure_reasons_categorized": {
+    "DOMAIN_NOT_ALLOWED": 0,
+    "NOT_FOUND": 0,
+    "TIMEOUT": 0,
+    "HTTP_ERROR": 0,
+    "PARSE_ERROR": 0,
+    "NO_EVIDENCE": 0,
+    "NO_SOURCE": 0,
+    "OTHER": 0
+  }
+}

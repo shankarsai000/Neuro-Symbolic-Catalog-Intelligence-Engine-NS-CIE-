@@ -151,6 +151,7 @@ async def run_enrichment_pipeline(
             extracted_attrs=final_attributes.model_dump(),
             invoice_desc=channel_desc.invoice_desc,
             provenance_score=sourced_evidence.provenance_score,
+            source_type=source_mode,
         )
         if validation_result.needs_review:
             confidence_breakdown.needs_review = True
