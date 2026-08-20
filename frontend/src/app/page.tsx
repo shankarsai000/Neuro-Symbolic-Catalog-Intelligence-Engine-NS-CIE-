@@ -249,7 +249,14 @@ const SAMPLE_PRESETS = [
   },
 ];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" && window.location.port === "8888" ? "" : "http://127.0.0.1:8001");
+const API_BASE = (function() {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined") {
+    if (window.location.port === "8888" || window.location.port === "80") return "";
+    return `${window.location.protocol}//${window.location.hostname}:8001`;
+  }
+  return "http://localhost:8001";
+})();
 
 export default function Dashboard() {
   const [activeScreen, setActiveScreen] = useState<
@@ -309,7 +316,7 @@ export default function Dashboard() {
         setMetrics(null);
       }
     } catch {
-      setApiError("Backend connection offline (FastAPI on :8000)");
+      setApiError("Backend connection offline");
       setMetrics(null);
     }
   }, []);
@@ -369,7 +376,7 @@ export default function Dashboard() {
         }
       } catch {
         if (!ignore) {
-          setApiError("Backend connection offline (FastAPI on :8000)");
+          setApiError("Backend connection offline");
           setMetrics(null);
         }
       }
@@ -413,7 +420,7 @@ export default function Dashboard() {
       setActiveScreen("product-detail");
     } catch (err: unknown) {
       const e = err as Error;
-      setApiError(`Enrichment failed: ${e.message}. Backend must be running on port 8000.`);
+      setApiError(`Enrichment failed: ${e.message}. Backend API offline.`);
       setSingleResult(null);
     } finally {
       setIsEnriching(false);
@@ -781,7 +788,7 @@ export default function Dashboard() {
                   metrics?.status === "HEALTHY" ? "bg-emerald-400 animate-pulse" : "bg-rose-400"
                 }`}
               />
-              {metrics?.status === "HEALTHY" ? "Connected (:8000)" : "Offline"}
+              {metrics?.status === "HEALTHY" ? "Connected" : "Offline"}
             </span>
           </div>
           <div className="flex items-center justify-between text-[11px] text-slate-400">
