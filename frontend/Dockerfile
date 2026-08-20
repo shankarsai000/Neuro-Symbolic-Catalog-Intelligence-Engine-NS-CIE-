@@ -22,7 +22,6 @@ WORKDIR /app
 RUN apk add --no-cache curl wget
 
 ENV NODE_ENV=production \
-    PORT=3005 \
     HOST=0.0.0.0 \
     NEXT_TELEMETRY_DISABLED=1
 
@@ -35,4 +34,4 @@ USER node
 
 EXPOSE 3005
 
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npm start -- -p ${PORT:-3000}"]
